@@ -5,6 +5,7 @@ import { ProductCard } from './ProductCard';
 import { BirthplaceSuggestion, BirthTimezoneMatch, inferBirthTimezone } from '../utils/birthTimezone';
 import { BirthDateField, BirthplaceAutocomplete } from './BirthDetailsFields';
 import { EARTHLY_BRANCHES, HEAVENLY_STEMS, TEN_GOD_ENGLISH } from '../utils/baziStructure';
+import { formatMoney } from '../utils/shipping';
 
 const ELEMENT_COLORS: Record<FiveElement, string> = {
   Wood: '#65836a', Fire: '#b9694f', Earth: '#b28b50', Metal: '#9c9a91', Water: '#58788a', Mixed: '#80674f',
