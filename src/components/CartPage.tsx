@@ -57,7 +57,7 @@ export const CartPage: React.FC<CartPageProps> = ({ cartItems, currency, shippin
               ) : freeShippingThreshold !== null ? (
                 <div className="p-4 rounded-lg bg-[#cfe9d4]/70 border border-[#cfe9d4] text-sm text-[#0a2013] flex items-center gap-2"><span className="material-symbols-outlined">local_shipping</span>Free-shipping estimate reached. Shopify checkout confirms the final delivery rate.</div>
               ) : (
-                <div className="p-4 rounded-lg bg-[#F3EFEA] border border-[#EAE4DC] text-sm flex items-start gap-2"><span aria-hidden="true" className="text-base">{destination?.flag}</span><span>Destination: <strong>{destination?.name}</strong>. Shopify’s configured base rate is {shippingCountry === 'NZ' ? 'NZ$10 standard, with a NZ$0 option from NZ$110' : 'NZ$33 per order'}. Checkout shows the final local amount. Alibaba supplier coverage and charges are separate; confirm each item can ship to this destination.</span></div>
+                <div className="p-4 rounded-lg bg-[#F3EFEA] border border-[#EAE4DC] text-sm flex items-start gap-2"><span aria-hidden="true" className="text-base">{destination?.flag}</span><span>Destination: <strong>{destination?.name}</strong>. Shopify’s configured base rate is {shippingCountry === 'NZ' ? 'NZ$20 standard, with a NZ$0 option from NZ$110' : 'NZ$33 per order'}. Checkout shows the final local amount. Alibaba supplier coverage and charges are separate; confirm each item can ship to this destination.</span></div>
               )}
 
               {cartItems.map((item) => {
@@ -87,7 +87,7 @@ export const CartPage: React.FC<CartPageProps> = ({ cartItems, currency, shippin
             <aside className="bg-white rounded-xl border border-[#EAE4DC] p-6 space-y-4 lg:sticky lg:top-24">
               <h2 className="font-serif text-xl text-[#321a0f]">Order summary</h2>
               <div className="flex justify-between text-sm"><span>Items ({itemCount})</span><span>{formatMoney(subtotal, currency)}</span></div>
-              <div className="flex justify-between items-start text-sm gap-4"><span>Shipping</span><span className="text-right text-xs text-[#82746f]">{shippingCountry === 'NZ' ? 'NZ$10 standard · free from NZ$110' : 'NZ$33 configured base rate'}</span></div>
+              <div className="flex justify-between items-start text-sm gap-4"><span>Shipping</span><span className="text-right text-xs text-[#82746f]">{shippingCountry === 'NZ' ? 'NZ$20 standard · free from NZ$110' : 'NZ$33 configured base rate'}</span></div>
               <p className="text-[11px] text-[#82746f] -mt-2">Shopify may convert the base rate for your market. Alibaba supplier coverage and charges are separate and must be confirmed for each item and destination.</p>
               <div className="border-t border-[#EAE4DC] pt-4 flex justify-between font-semibold text-[#321a0f]"><span>Items subtotal</span><span>{formatMoney(subtotal, currency)}</span></div>
               {checkoutError && <p role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-800">{checkoutError}</p>}
