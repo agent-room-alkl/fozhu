@@ -1,7 +1,8 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import { BirthDetails, Currency } from '../types';
 import { MalaProduct } from '../types';
-import { inferBirthTimezone } from '../utils/birthTimezone';
+import { BirthTimezoneMatch, BirthplaceSuggestion, inferBirthTimezone } from '../utils/birthTimezone';
+import { BirthDateField, BirthplaceAutocomplete } from './BirthDetailsFields';
 import { ElementMark } from './ElementMark';
 
 interface HeroSectionProps {
@@ -45,24 +46,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [locationSource, setLocationSource] = useState<'detecting' | 'ip' | 'device'>('detecting');
   const locationEdited = useRef(false);
   const locationLookupId = useRef(0);
+  const matchedBirthplace = useRef<BirthplaceSuggestion | null>(null);
 
-  const lookupBirthplaceTimezone = async (place: string) => {
+  const lookupBirthplaceTimezone = async (place: string): Promise<BirthTimezoneMatch | null> => {
     const requestId = ++locationLookupId.current;
-    if (place.trim().length < 2) {
-      setTimeZoneStatus('Using your approximate current-region time zone.');
-      return timeZone;
-    }
+    if (place.trim().length < 2) return null;
     setTimeZoneStatus('Matching time zone to birthplace…');
     const match = await inferBirthTimezone(place);
     if (requestId === locationLookupId.current) {
       if (match) {
         setTimeZone(match.timeZone);
-        setTimeZoneStatus(`Time zone matched: ${match.timeZone}`);
+        setBirthplace(match.location);
+        setTimeZoneStatus('City matched · time zone set automatically.');
       } else {
         setTimeZoneStatus('Place not matched · using your approximate current-region time zone.');
       }
     }
-    return match?.timeZone || timeZone;
+    return match;
   };
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       })
       .then((data) => {
         if (locationEdited.current) return;
-        const place = [data.city, data.region, data.country_name].filter(Boolean).filter((part, index, all) => all.indexOf(part) === index).join(', ');
+        const place = [data.city, data.country_name].filter(Boolean).filter((part, index, all) => all.indexOf(part) === index).join(', ');
         if (place) {
           setBirthplace(place);
           setLocationSource('ip');
@@ -93,11 +93,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     };
   }, []);
 
-  const handleBirthDetailsSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleBirthDetailsSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
-    onSubmitBirthDetails({ birthDate, birthTime, birthplace, timeZone, gender: gender || 'prefer_not_to_say' });
+    const selectedPlace = matchedBirthplace.current?.location === birthplace ? matchedBirthplace.current : null;
+    const placeMatch = selectedPlace ? null : await lookupBirthplaceTimezone(birthplace);
+    const resolvedTimeZone = selectedPlace?.timeZone || placeMatch?.timeZone || timeZone;
+    const resolvedBirthplace = selectedPlace?.location || placeMatch?.location || birthplace;
+    onSubmitBirthDetails({ birthDate, birthTime, birthplace: resolvedBirthplace, timeZone: resolvedTimeZone, gender: gender || 'prefer_not_to_say' });
   };
   const featuredPrice = featuredProduct ? currency === 'USD' ? featuredProduct.priceUSD : currency === 'AUD' ? featuredProduct.priceAUD : featuredProduct.priceNZD : null;
 
@@ -114,32 +118,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       />
       <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#211713]/90 via-[#211713]/55 to-[#211713]/5" />
 
-      <div className="relative z-10 mx-auto flex min-h-[700px] max-w-7xl flex-col px-4 py-7 sm:px-6 lg:min-h-[640px] lg:px-8 lg:py-8">
-        <div className="max-w-lg space-y-4">
+      <div className="relative z-10 mx-auto flex min-h-[700px] w-full max-w-7xl flex-col px-2 py-7 sm:px-6 lg:min-h-[640px] lg:px-8 lg:py-8">
+        <div className="-ml-1 w-[calc(100%+0.5rem)] max-w-lg space-y-4 sm:ml-0 sm:w-full">
           <div className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-white/25 bg-[#FAF8F5]/95 px-3 py-1.5 shadow-lg">
             <span className="material-symbols-outlined text-sm text-[#4d6453]">spa</span>
             <span className="text-[10px] font-sans text-[#3A3835] sm:text-[11px]">Five Elements · Chinese cultural tradition</span>
           </div>
 
-          <h1 className="max-w-xl font-serif text-4xl leading-tight tracking-tight text-[#FAF8F5] sm:text-5xl sm:leading-[1.08] lg:text-6xl">
+          <h1 className="w-full max-w-xl break-words font-serif text-[clamp(2.25rem,9vw,3rem)] leading-[1.08] tracking-tight text-[#FAF8F5] sm:text-5xl lg:text-6xl">
             Find a piece that<br />
             <span className="font-normal italic text-[#E1BD7E]">reflects your style.</span>
           </h1>
 
-          <form onSubmit={handleBirthDetailsSubmit} className="max-w-md rounded-2xl border border-white/60 bg-[#FAF8F5]/95 p-3.5 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-4">
+          <form onSubmit={handleBirthDetailsSubmit} className="w-full max-w-md rounded-2xl border border-white/60 bg-[#FAF8F5]/95 p-3.5 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-4">
             <div className="mb-2 flex items-center justify-between gap-3">
               <p className="font-serif text-base text-[#321a0f] sm:text-lg">Get your personal reading</p>
               <span className="shrink-0 text-[10px] text-[#82746f]">About 30 seconds</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
+            <div className="grid grid-cols-1 items-start gap-3">
+              <label className="min-w-0 text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
                 Date of birth <span className="text-[#a64c37]">*</span>
-                <input type="date" required max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} className="mt-1.5 w-full rounded-md border border-[#ded4ca] bg-white px-2.5 py-2.5 text-sm font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" />
+                <BirthDateField compact value={birthDate} onChange={setBirthDate} />
               </label>
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
+              <label className="min-w-0 text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
                 Birth time <span className="font-normal normal-case tracking-normal text-[#82746f]">(optional)</span>
-                <select value={birthTime} onChange={(event) => setBirthTime(event.target.value)} className="mt-1.5 w-full rounded-md border border-[#ded4ca] bg-white px-2.5 py-[11px] text-sm font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]">
+                <select value={birthTime} onChange={(event) => setBirthTime(event.target.value)} className="mt-1.5 min-w-0 w-full rounded-md border border-[#ded4ca] bg-white px-1.5 py-[11px] text-[12px] font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E] sm:px-2.5 sm:text-sm">
                   <option value="">Not sure / skip</option>
                   {BIRTH_TIME_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
@@ -160,7 +164,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               Birthplace or region
               <span className="relative mt-1.5 block">
                 <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-[#9a8875]">location_on</span>
-                <input type="text" value={birthplace} onChange={(event) => { setBirthplace(event.target.value); locationEdited.current = true; setTimeZoneStatus('Time zone will be matched automatically when you leave this field.'); }} onBlur={() => { void lookupBirthplaceTimezone(birthplace); }} placeholder={locationSource === 'detecting' ? 'Detecting your region…' : 'Enter your birth city or region'} className="w-full rounded-md border border-[#ded4ca] bg-white py-2.5 pl-8 pr-3 text-sm font-normal normal-case tracking-normal text-[#321a0f] placeholder:text-[#a69b91] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" />
+                <BirthplaceAutocomplete id="hero-birthplace" value={birthplace} onChange={(value) => { setBirthplace(value); matchedBirthplace.current = null; locationEdited.current = true; setTimeZoneStatus('Start typing to choose a city and country.'); }} onSelect={(place) => { matchedBirthplace.current = place; setBirthplace(place.location); setTimeZone(place.timeZone); setTimeZoneStatus('City matched · time zone set automatically.'); locationEdited.current = true; }} placeholder={locationSource === 'detecting' ? 'Detecting your region…' : 'Type a city name'} className="w-full rounded-md border border-[#ded4ca] bg-white py-2.5 pr-3 text-sm font-normal normal-case tracking-normal text-[#321a0f] placeholder:text-[#a69b91] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" leadingIcon />
               </span>
             </label>
 

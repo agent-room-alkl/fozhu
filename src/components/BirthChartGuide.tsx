@@ -2,7 +2,8 @@ import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } f
 import { BirthDetails, Currency, MalaProduct } from '../types';
 import { FiveElement, requestSharedBaziReading, SharedBaziReading } from '../types/bazi';
 import { ProductCard } from './ProductCard';
-import { inferBirthTimezone } from '../utils/birthTimezone';
+import { BirthplaceSuggestion, BirthTimezoneMatch, inferBirthTimezone } from '../utils/birthTimezone';
+import { BirthDateField, BirthplaceAutocomplete } from './BirthDetailsFields';
 import { EARTHLY_BRANCHES, HEAVENLY_STEMS, TEN_GOD_ENGLISH } from '../utils/baziStructure';
 
 const ELEMENT_COLORS: Record<FiveElement, string> = {
@@ -62,6 +63,7 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
   const locationLookupId = useRef(0);
+  const matchedBirthplace = useRef<BirthplaceSuggestion | null>(null);
   const autoStartedRef = useRef(false);
   const recommendedElement = reading?.beadRecommendation.element || reading?.elementFocus || null;
 
@@ -98,7 +100,8 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
         if (initialDetails.birthplace.trim().length >= 2) {
           const match = await inferBirthTimezone(initialDetails.birthplace, controller.signal);
           resolvedTimeZone = match?.timeZone || initialDetails.timeZone;
-          setTimeZoneStatus(match ? `Time zone matched: ${match.timeZone}` : `Place not matched · using ${initialDetails.timeZone}`);
+          setTimeZoneStatus(match ? 'City matched · time zone set automatically.' : 'Place not matched · using your current-region time zone.');
+          if (match) setBirthplace(match.location);
         }
         if (!controller.signal.aborted) {
           setTimeZone(resolvedTimeZone);
@@ -130,24 +133,27 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
     });
     return (related.length ? related : products).slice(0, 3);
   }, [reading, recommendedElement, products]);
+  const featuredRecommendation = recommendedProducts[0];
+  const additionalRecommendations = recommendedProducts.slice(1);
+  const recommendationReason = reading?.beadRecommendation.rationale || `A symbolic style direction based on the ${recommendedElement} theme.`;
+  const recommendationMaterials = reading?.beadRecommendation.materials.join(' · ') || reading?.materialSuggestions.join(' · ') || (recommendedElement ? ELEMENT_MATERIALS[recommendedElement] : '');
+  const recommendationColours = reading?.beadRecommendation.colours || [];
 
-  const lookupBirthplaceTimezone = async (place: string) => {
+  const lookupBirthplaceTimezone = async (place: string): Promise<BirthTimezoneMatch | null> => {
     const requestId = ++locationLookupId.current;
-    if (place.trim().length < 2) {
-      setTimeZoneStatus(`Using current-region time zone: ${timeZone}`);
-      return timeZone;
-    }
+    if (place.trim().length < 2) return null;
     setTimeZoneStatus('Matching time zone to birthplace…');
     const match = await inferBirthTimezone(place);
     if (requestId === locationLookupId.current) {
       if (match) {
         setTimeZone(match.timeZone);
-        setTimeZoneStatus(`Time zone matched: ${match.timeZone}`);
+        setBirthplace(match.location);
+        setTimeZoneStatus('City matched · time zone set automatically.');
       } else {
         setTimeZoneStatus(`Place not matched · using current-region time zone: ${timeZone}`);
       }
     }
-    return match?.timeZone || timeZone;
+    return match;
   };
 
   const submit = async (event: FormEvent) => {
@@ -159,9 +165,11 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
     setError('');
     setIsLoading(true);
     setLoadingMessage(birthplace.trim().length >= 2 ? 'Matching your birth location…' : 'Preparing your personal reading…');
-    const resolvedTimeZone = await lookupBirthplaceTimezone(birthplace);
+    const selectedPlace = matchedBirthplace.current?.location === birthplace ? matchedBirthplace.current : null;
+    const placeMatch = selectedPlace ? null : await lookupBirthplaceTimezone(birthplace);
+    const resolvedTimeZone = selectedPlace?.timeZone || placeMatch?.timeZone || timeZone;
     setLoadingMessage('Preparing your personal reading…');
-    void runReading({ birthDate, birthTime, birthplace, timeZone: resolvedTimeZone, gender });
+    void runReading({ birthDate, birthTime, birthplace: selectedPlace?.location || placeMatch?.location || birthplace, timeZone: resolvedTimeZone, gender });
   };
 
   const editDetails = () => {
@@ -201,8 +209,8 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
             <form onSubmit={submit} className="bg-white border border-[#EAE4DC] rounded-xl p-5 sm:p-7 aura-shadow space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="birth-date" className="block text-sm font-semibold text-[#321a0f]">Date of birth <span className="text-[#a64c37]">*</span></label>
-                  <input id="birth-date" type="date" required max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="mt-2 w-full rounded-lg border border-[#d8cec4] bg-[#FAF8F5] px-3 py-3 text-sm text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" />
+                  <p className="block text-sm font-semibold text-[#321a0f]">Date of birth <span className="text-[#a64c37]">*</span></p>
+                  <div className="mt-2"><BirthDateField value={birthDate} onChange={setBirthDate} /></div>
                 </div>
                 <div>
                   <label htmlFor="birth-time" className="block text-sm font-semibold text-[#321a0f]">Time of birth <span className="font-normal text-[#82746f]">(optional)</span></label>
@@ -227,7 +235,7 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
               </div>
               <div>
                 <label htmlFor="birthplace" className="block text-sm font-semibold text-[#321a0f]">Birthplace or region <span className="font-normal text-[#82746f]">(optional)</span></label>
-                <input id="birthplace" type="text" placeholder="City, region or country" value={birthplace} onChange={(e) => { setBirthplace(e.target.value); setTimeZoneStatus('Time zone will be matched automatically when you leave this field.'); }} onBlur={() => { void lookupBirthplaceTimezone(birthplace); }} className="mt-2 w-full rounded-lg border border-[#d8cec4] bg-[#FAF8F5] px-3 py-3 text-sm text-[#321a0f] placeholder:text-[#a69b91] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" />
+                <div className="mt-2"><BirthplaceAutocomplete id="birthplace" value={birthplace} onChange={(value) => { setBirthplace(value); matchedBirthplace.current = null; setTimeZoneStatus('Start typing to choose a city and country.'); }} onSelect={(place) => { matchedBirthplace.current = place; setBirthplace(place.location); setTimeZone(place.timeZone); setTimeZoneStatus('City matched · time zone set automatically.'); }} placeholder="Type a city name" className="w-full rounded-lg border border-[#d8cec4] bg-[#FAF8F5] px-3 py-3 text-sm text-[#321a0f] placeholder:text-[#a69b91] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" /></div>
               </div>
               {error && <p role="alert" className="rounded-lg border border-[#e8c8be] bg-[#fff5f1] p-3 text-sm leading-6 text-[#8e3825]">{error}</p>}
               {isLoading && <div role="status" aria-live="polite" className="overflow-hidden rounded-lg border border-[#EAE4DC] bg-[#F7F3EF] p-3.5 text-sm text-[#504440]"><div className="flex items-center gap-3"><span className="material-symbols-outlined animate-spin text-[#8a6740]">progress_activity</span><span>{loadingMessage}</span></div><div className="mt-3 h-1 overflow-hidden rounded-full bg-[#EAE4DC]"><div className="reading-progress h-full w-1/3 rounded-full bg-[#bd8a36]" /></div><p className="mt-2 text-xs text-[#82746f]">We’re checking your birth details and preparing your reading. This may take a moment.</p></div>}
@@ -270,6 +278,39 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
               })}</div>
               <p className="mt-4 text-xs leading-5 text-[#82746f]">A lower score does not automatically mean an element is missing or should be “added”. Traditional readings also consider season, roots and interactions.</p>
             </section>
+            {recommendedElement && <section aria-labelledby="personal-bead-recommendation" className="relative overflow-hidden rounded-2xl border border-[#b89a6c] bg-[#2C1B14] text-[#FAF8F5] shadow-xl">
+              <div className="pointer-events-none absolute inset-0 opacity-30" style={{ background: `radial-gradient(ellipse at 12% 0%, ${ELEMENT_COLORS[recommendedElement]} 0%, transparent 55%)` }} />
+              <div className="relative p-5 sm:p-8 lg:p-10">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="inline-flex items-center gap-2 rounded-full border border-[#E1BD7E]/50 bg-black/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E1BD7E]"><span className="material-symbols-outlined text-sm">auto_awesome</span> Your personal bead recommendation</p>
+                  <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs">Matched to your {recommendedElement} theme</span>
+                </div>
+                <div className="mt-6 grid gap-7 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+                  {featuredRecommendation ? <button type="button" onClick={() => onViewProduct(featuredRecommendation)} className="group relative block aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#1d120d] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E1BD7E]">
+                    <img src={featuredRecommendation.image} alt={featuredRecommendation.name} onError={(event) => { (event.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+                    <span className="absolute left-4 top-4 rounded-full bg-[#FAF8F5] px-3 py-1.5 text-xs font-semibold text-[#321a0f]">Best match for your reading</span>
+                    <span className="absolute bottom-4 left-4 rounded-full bg-[#2C1B14]/85 px-3 py-1.5 text-xs text-white">{recommendedElement} colour &amp; material direction</span>
+                  </button> : <div className="flex min-h-64 flex-col justify-center rounded-xl border border-white/15 bg-white/5 p-6"><span className="material-symbols-outlined text-4xl text-[#E1BD7E]">spa</span><p className="mt-4 font-serif text-2xl">Explore the {recommendedElement} palette</p><p className="mt-2 text-sm leading-6 text-[#EAE4DC]">We don’t have a directly matched piece in the current catalogue yet. Browse the full collection for a style you like.</p><button onClick={onBackToStore} className="mt-5 w-fit rounded-lg bg-[#E1BD7E] px-5 py-3 text-sm font-semibold text-[#2C1B14]">Browse all pieces</button></div>}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#E1BD7E]">A considered match · {recommendedElement}</p>
+                    <h3 id="personal-bead-recommendation" className="mt-2 font-serif text-3xl leading-tight sm:text-4xl">Choose a piece that feels like yours</h3>
+                    <p className="mt-4 text-sm leading-7 text-[#EAE4DC]">{recommendationReason} {recommendationMaterials}{recommendationColours.length > 0 ? ` · ${recommendationColours.join(', ')}` : ''}. Use the colour, material and personal meaning as your guide.</p>
+                    <p className="mt-3 text-xs leading-5 text-[#c9bdb2]">A Five-Element cultural styling suggestion for reflection and personal expression; it does not promise changes to health, energy or fortune.</p>
+                    {featuredRecommendation && <div className="mt-6 rounded-xl border border-white/15 bg-black/15 p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c9bdb2]">Recommended piece</p><button type="button" onClick={() => onViewProduct(featuredRecommendation)} className="mt-1 text-left font-serif text-xl leading-snug hover:text-[#E1BD7E]">{featuredRecommendation.name}</button></div>
+                        <span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-xs text-[#E1BD7E]">{featuredRecommendation.variants ? 'Options available' : 'Ready to add'}</span>
+                      </div>
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                        <div><p className="font-serif text-2xl font-bold">{formatMoney(currency === 'NZD' ? featuredRecommendation.priceNZD : currency === 'AUD' ? featuredRecommendation.priceAUD : featuredRecommendation.priceUSD, currency)}</p><p className="mt-0.5 text-[11px] text-[#c9bdb2]">Item price · shipping shown at checkout</p></div>
+                        <button type="button" onClick={() => featuredRecommendation.variants ? onQuickView(featuredRecommendation.id, recommendedElement || undefined) : onAddToCart(featuredRecommendation, featuredRecommendation.defaultSize || 'Standard', undefined, recommendedElement || undefined)} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-[#E1BD7E] px-5 py-3 text-sm font-bold text-[#2C1B14] shadow-lg transition hover:bg-[#f0d9a9] active:scale-[.99] sm:flex-none sm:min-w-56"><span className="material-symbols-outlined text-lg">{featuredRecommendation.variants ? 'tune' : 'add_shopping_cart'}</span>{featuredRecommendation.variants ? 'Choose your style' : 'Add recommendation to bag'}</button>
+                      </div>
+                    </div>}
+                  </div>
+                </div>
+                {additionalRecommendations.length > 0 && <div className="mt-8 border-t border-white/15 pt-6"><div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#c9bdb2]">More ways to wear this element</p><h4 className="mt-1 font-serif text-xl">Other pieces you may like</h4></div><span className="text-xs text-[#c9bdb2]">Choose the one that suits your everyday style</span></div><div className="mt-4 grid gap-4 sm:grid-cols-2">{additionalRecommendations.map((product) => <ProductCard key={product.id} product={product} currency={currency} onAddToCart={(item, size, config) => onAddToCart(item, size, config, recommendedElement || undefined)} onQuickView={(id) => onQuickView(id, recommendedElement || undefined)} onViewProduct={onViewProduct} />)}</div></div>}
+              </div>
+            </section>}
             {reading.luckCycles.length > 0 && <section className="rounded-xl border border-[#EAE4DC] bg-white p-5 sm:p-7"><div><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Long-term themes</p><h3 className="mt-1 font-serif text-2xl text-[#321a0f]">Life-cycle reflections</h3></div><div className="mt-5 grid md:grid-cols-3 gap-4">{reading.luckCycles.map((cycle) => <article key={cycle.period} className="rounded-lg bg-[#F7F3EF] p-4"><p className="font-serif text-lg text-[#321a0f]">{cycle.period}</p><div className="mt-1"><StarRating score={cycle.score} /></div><p className="mt-3 text-sm leading-6 text-[#625650]">{cycle.theme}</p>{cycle.supportiveElement && <p className="mt-3 text-xs text-[#4d6453]">Element theme: {cycle.supportiveElement}</p>}</article>)}</div><p className="mt-4 text-xs text-[#82746f]">Approximate traditional themes for reflection, not fixed outcomes. Birth time can affect cycle timing.</p></section>}
             {reading.annualOutlook.length > 0 && <section className="rounded-xl border border-[#EAE4DC] bg-white p-5 sm:p-7"><div><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Year-by-year themes</p><h3 className="mt-1 font-serif text-2xl text-[#321a0f]">The years ahead</h3></div><div className="mt-5 grid sm:grid-cols-2 xl:grid-cols-5 gap-3">{reading.annualOutlook.map((year) => <article key={year.year} className="rounded-lg border border-[#EAE4DC] p-4"><div className="flex items-center justify-between gap-2"><h4 className="font-serif text-xl text-[#321a0f]">{year.year}</h4><StarRating score={year.score} /></div><p className="mt-3 text-sm leading-6 text-[#625650]">{year.theme}</p><p className="mt-3 text-xs text-[#4d6453]"><strong>Opportunity:</strong> {year.opportunity}</p><p className="mt-2 text-xs text-[#8e5749]"><strong>Take care with:</strong> {year.caution}</p></article>)}</div></section>}
             {reading.monthlyOutlook.length > 0 && <section className="rounded-xl border border-[#EAE4DC] bg-white p-5 sm:p-7"><div><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Month-by-month reflections</p><h3 className="mt-1 font-serif text-2xl text-[#321a0f]">A traditional outlook for the year</h3></div><div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">{reading.monthlyOutlook.map((month) => <article key={month.month} className="rounded-lg bg-[#F7F3EF] p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold text-sm text-[#321a0f]">{month.month}</h4><StarRating score={month.score} /></div><p className="mt-3 text-sm leading-6 text-[#625650]">{month.theme}</p></article>)}</div><p className="mt-4 text-xs leading-5 text-[#82746f]">Ratings are traditional reflective prompts, not probabilities or guaranteed good or bad fortune.</p></section>}
@@ -281,10 +322,6 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
               ] as const).map(([title, content]) => <section key={title} className="rounded-xl border border-[#EAE4DC] bg-white p-5"><h3 className="font-serif text-lg text-[#321a0f]">{title}</h3><p className="mt-2 text-sm leading-6 text-[#625650]">{content}</p></section>)}
               {reading.sharedTakeaways.length > 0 && <section className="rounded-xl border border-[#EAE4DC] bg-[#F3EFEA] p-5"><h3 className="font-serif text-lg text-[#321a0f]">Key reflections</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-[#625650]">{reading.sharedTakeaways.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul></section>}
             </div>
-            {recommendedElement && <section>
-              <div className="max-w-3xl"><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Personalised bead direction</p><h3 className="mt-2 font-serif text-2xl text-[#321a0f]">A {recommendedElement.toLowerCase()}-inspired bracelet or mala</h3><p className="mt-2 text-sm text-[#625650] leading-6">{reading.beadRecommendation.rationale || `A symbolic style direction based on the ${recommendedElement} theme.`} {reading.beadRecommendation.materials.join(' · ') || reading.materialSuggestions.join(' · ') || ELEMENT_MATERIALS[recommendedElement]}. {reading.beadRecommendation.colours.length > 0 && <><strong> Colours:</strong> {reading.beadRecommendation.colours.join(', ')}.</>} Choose pieces for their colour, material and personal meaning.</p></div>
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">{recommendedProducts.map((product) => <ProductCard key={product.id} product={product} currency={currency} onAddToCart={(item, size, config) => onAddToCart(item, size, config, recommendedElement || undefined)} onQuickView={(id) => onQuickView(id, recommendedElement || undefined)} onViewProduct={onViewProduct} />)}</div>
-            </section>}
             <div className="rounded-xl bg-[#2C1B14] p-5 sm:p-7 text-[#FAF8F5] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"><div><p className="font-serif text-lg">A note on this reading</p><p className="mt-1 max-w-3xl text-xs leading-5 text-[#EAE4DC]">This is a traditional cultural interpretation for reflection, not a certain prediction or professional advice. Bead suggestions are symbolic styling ideas, not a promise to change your future.</p></div><button onClick={onBackToStore} className="shrink-0 px-5 py-2.5 rounded-lg bg-[#E1BD7E] text-[#2C1B14] text-sm font-semibold hover:bg-[#f0d9a9]">Browse all pieces</button></div>
           </div>
         )}
