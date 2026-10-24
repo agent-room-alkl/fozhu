@@ -161,10 +161,7 @@ export async function createShopifyCheckout(lines: Array<{ merchandiseId: string
   const data = await storefront<{ cartCreate: { cart: { id: string; checkoutUrl: string } | null; userErrors: Array<{ message: string }> } }>(CART_CREATE, { lines, country: shippingCountry });
   const result = data.cartCreate;
   if (result.userErrors.length || !result.cart?.checkoutUrl) throw new Error(result.userErrors.map((error) => error.message).join(' ') || 'Shopify could not create checkout.');
-  // The custom storefront domain points to this Vercel app, so Shopify's
-  // generated checkout URL must use the canonical Shopify host instead.
-  const checkoutUrl = new URL(result.cart.checkoutUrl);
-  checkoutUrl.protocol = 'https:';
-  checkoutUrl.host = SHOP_DOMAIN;
-  return checkoutUrl.toString();
+  // Keep Shopify's checkout host. The custom domain serves the Vercel
+  // storefront, so rewriting /cart/c/... there sends checkout to Vercel (404).
+  return result.cart.checkoutUrl;
 }
