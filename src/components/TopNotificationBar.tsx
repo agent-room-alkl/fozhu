@@ -1,65 +1,58 @@
 import React from 'react';
 import { Currency } from '../types';
+import { DEFAULT_SHIPPING_COUNTRY, SHIPPING_COUNTRIES, ShippingCountryCode } from '../data/shippingCountries';
 
 interface TopNotificationBarProps {
   currency: Currency;
-  onCurrencyChange: (c: Currency) => void;
+  shippingCountry: ShippingCountryCode;
+  detectedCountryCode: string | null;
+  onShippingCountryChange: (code: ShippingCountryCode) => void;
   flightTimer: string;
 }
 
 export const TopNotificationBar: React.FC<TopNotificationBarProps> = ({
-  currency,
-  onCurrencyChange,
+  shippingCountry,
+  detectedCountryCode,
+  onShippingCountryChange,
 }) => {
+  const selectedCountry = SHIPPING_COUNTRIES.find((country) => country.code === shippingCountry)
+    || SHIPPING_COUNTRIES.find((country) => country.code === DEFAULT_SHIPPING_COUNTRY)!;
+  const visitorIsOutsideShippingArea = detectedCountryCode && detectedCountryCode !== selectedCountry.code;
+
   return (
     <aside
-      aria-label="Announcement"
-      className="bg-[#2C1B14] text-[#FAF8F5] px-4 py-2 text-[11px] font-sans tracking-widest border-b border-[#4a2f23] select-none"
+      aria-label="Shipping information"
+      className="bg-[#2C1B14] text-[#FAF8F5] px-4 py-2 text-[11px] font-sans tracking-wide border-b border-[#4a2f23]"
     >
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
         <div className="flex items-center gap-2 text-center md:text-left">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#E1BD7E] animate-pulse"></span>
-          <span className="font-medium">INTERNATIONAL SHIPPING AVAILABLE</span>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#E1BD7E]"></span>
+          <span className="font-medium">CURRENTLY SHIPPING TO NEW ZEALAND</span>
           <span className="text-[#bd9686] hidden sm:inline">•</span>
-          <span className="hidden sm:inline text-[#E1BD7E]">
-            Rates and eligible destinations confirmed at checkout
-          </span>
+          <span className="hidden sm:inline text-[#E1BD7E]">More destinations coming soon</span>
         </div>
 
-        <div className="flex items-center gap-4 text-xs">
-          <span className="flex items-center gap-1.5 text-[#bd9686]">
-            <span className="material-symbols-outlined text-sm">local_shipping</span>
-            <span>Supplier fulfilment · tracking depends on route</span>
-          </span>
-          <div className="h-3 w-px bg-[#4a2f23]"></div>
-          <div className="flex items-center gap-1.5 font-semibold text-[#FAF8F5]">
-            <button
-              onClick={() => onCurrencyChange('NZD')}
-              className={`transition-colors cursor-pointer px-1 py-0.5 rounded ${
-                currency === 'NZD' ? 'text-[#E1BD7E] font-bold' : 'text-[#bd9686] hover:text-[#FAF8F5]'
-              }`}
+        <div className="flex items-center gap-3 text-xs">
+          <label htmlFor="shipping-country" className="text-[#bd9686]">Ship to</label>
+          <div className="relative">
+            <select
+              id="shipping-country"
+              aria-label="Shipping destination"
+              value={selectedCountry.code}
+              onChange={(event) => onShippingCountryChange(event.target.value as ShippingCountryCode)}
+              className="appearance-none bg-transparent text-[#FAF8F5] font-semibold cursor-pointer rounded px-1 pr-5 py-1 focus:outline-none focus:ring-1 focus:ring-[#E1BD7E]"
             >
-              NZD $
-            </button>
-            <span className="text-[#4a2f23]">/</span>
-            <button
-              onClick={() => onCurrencyChange('AUD')}
-              className={`transition-colors cursor-pointer px-1 py-0.5 rounded ${
-                currency === 'AUD' ? 'text-[#E1BD7E] font-bold' : 'text-[#bd9686] hover:text-[#FAF8F5]'
-              }`}
-            >
-              AUD $
-            </button>
-            <span className="text-[#4a2f23]">/</span>
-            <button
-              onClick={() => onCurrencyChange('USD')}
-              className={`transition-colors cursor-pointer px-1 py-0.5 rounded ${
-                currency === 'USD' ? 'text-[#E1BD7E] font-bold' : 'text-[#bd9686] hover:text-[#FAF8F5]'
-              }`}
-            >
-              USD $
-            </button>
+              {SHIPPING_COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code} className="bg-[#2C1B14] text-[#FAF8F5]">
+                  {country.flag} {country.name}
+                </option>
+              ))}
+            </select>
+            <span aria-hidden="true" className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-sm pointer-events-none">expand_more</span>
           </div>
+          {visitorIsOutsideShippingArea && (
+            <span className="hidden lg:inline text-[#bd9686]">Your location is detected, but delivery is currently available to New Zealand only.</span>
+          )}
         </div>
       </div>
     </aside>

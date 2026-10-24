@@ -1,7 +1,9 @@
 import { MalaProduct } from '../types';
 import { SHOPIFY_STARTER_PRODUCTS } from '../data/shopifyStarterCatalog';
 
-const SHOP_DOMAIN = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || 'fozhu.co.nz').trim();
+// Storefront API requests must target the Shopify shop domain, not the custom
+// storefront domain (which may point to this Vercel app).
+const SHOP_DOMAIN = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || 'qxn57z-ep.myshopify.com').trim();
 const STOREFRONT_TOKEN = (import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN || '').trim();
 const API_VERSION = '2026-10';
 export const shopifyMarketCountry = (currency: 'NZD' | 'AUD' | 'USD') => currency === 'AUD' ? 'AU' : currency === 'USD' ? 'US' : 'NZ';

@@ -68,10 +68,26 @@ function baziApiPlugin(apiKey: string, model: string | undefined) {
   };
 }
 
+function geoCountryPlugin() {
+  return {
+    name: 'fozhu-geo-country-api',
+    configureServer(server: any) {
+      server.middlewares.use('/api/geo-country', (req: any, res: any) => {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store');
+        const rawCountryCode = req.headers['x-vercel-ip-country'];
+        const countryCode = Array.isArray(rawCountryCode) ? rawCountryCode[0] : rawCountryCode;
+        res.statusCode = 200;
+        res.end(JSON.stringify({ countryCode: countryCode && /^[A-Za-z]{2}$/.test(countryCode) ? countryCode.toUpperCase() : null }));
+      });
+    },
+  };
+}
+
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    plugins: [react(), tailwindcss(), baziApiPlugin(env.AI_GATEWAY_API_KEY, env.BAZI_CLAUDE_MODEL)],
+    plugins: [react(), tailwindcss(), baziApiPlugin(env.AI_GATEWAY_API_KEY, env.BAZI_CLAUDE_MODEL), geoCountryPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

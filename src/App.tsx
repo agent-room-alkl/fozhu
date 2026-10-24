@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BirthDetails, Currency, SoulIntention, CartItem, MalaProduct } from './types';
 import { MALA_PRODUCTS } from './data/malas';
 import { SHOPIFY_STARTER_PRODUCTS } from './data/shopifyStarterCatalog';
+import { DEFAULT_SHIPPING_COUNTRY, getShippingCountry, SHIPPING_COUNTRIES, ShippingCountryCode } from './data/shippingCountries';
 import { singingBowl } from './utils/audio';
 
 // Components
@@ -28,6 +29,8 @@ import { getShopifyVariantId } from './utils/productVariants';
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<'home' | 'cart' | 'birth-chart'>('home');
   const [currency, setCurrency] = useState<Currency>('NZD');
+  const [shippingCountry, setShippingCountry] = useState<ShippingCountryCode>(DEFAULT_SHIPPING_COUNTRY);
+  const [detectedCountryCode, setDetectedCountryCode] = useState<string | null>(null);
   const [activeIntention, setActiveIntention] = useState<SoulIntention>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [birthDetails, setBirthDetails] = useState<BirthDetails | null>(null);
@@ -35,6 +38,39 @@ export default function App() {
   const [shopifyCatalogState, setShopifyCatalogState] = useState<'loading' | 'connected' | 'empty' | 'preview' | 'error'>(hasShopifyStorefrontToken ? 'loading' : 'preview');
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    const savedCountryCode = localStorage.getItem('fozhu-ship-country');
+    const savedCountry = getShippingCountry(savedCountryCode);
+    if (savedCountry) {
+      setShippingCountry(savedCountry.code);
+      setCurrency(savedCountry.currency);
+    }
+    fetch('/api/geo-country', { headers: { Accept: 'application/json' } })
+      .then((response) => response.ok ? response.json() : null)
+      .then((result: { countryCode?: string | null } | null) => {
+        if (!active || !result?.countryCode) return;
+        setDetectedCountryCode(result.countryCode.toUpperCase());
+        if (savedCountry) return;
+        const detectedCountry = getShippingCountry(result.countryCode);
+        const country = detectedCountry || SHIPPING_COUNTRIES.find((item) => item.code === DEFAULT_SHIPPING_COUNTRY)!;
+        setShippingCountry(country.code);
+        setCurrency(country.currency);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const handleShippingCountryChange = (code: ShippingCountryCode) => {
+    const country = getShippingCountry(code);
+    if (!country) return;
+    setShippingCountry(country.code);
+    setCurrency(country.currency);
+    localStorage.setItem('fozhu-ship-country', country.code);
+    singingBowl.strike(528, 1.5);
+    showToast(`Shipping destination set to ${country.name}.`);
+  };
 
   useEffect(() => {
     if (!hasShopifyStorefrontToken) return;
@@ -162,11 +198,9 @@ export default function App() {
       {/* 1. Regional Notification Bar */}
       <TopNotificationBar
         currency={currency}
-        onCurrencyChange={(c) => {
-          setCurrency(c);
-          singingBowl.strike(528, 1.5);
-          showToast(`Currency updated to ${c} $`);
-        }}
+        shippingCountry={shippingCountry}
+        detectedCountryCode={detectedCountryCode}
+        onShippingCountryChange={handleShippingCountryChange}
         flightTimer="04:32:15"
       />
 
