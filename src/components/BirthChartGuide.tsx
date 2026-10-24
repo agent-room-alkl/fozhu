@@ -120,7 +120,11 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
   const recommendedProducts = useMemo(() => {
     if (!recommendedElement) return [];
     return products
-      .filter((product) => product.shopifyTags?.some((tag) => tag === `element-${recommendedElement.toLowerCase()}` || tag === `five-elements-${recommendedElement.toLowerCase()}`))
+      .filter((product) => product.shopifyTags?.some((tag) => {
+        const normalized = tag.trim().toLowerCase();
+        const element = recommendedElement.toLowerCase();
+        return normalized === `element-${element}` || normalized === `five-element-${element}` || normalized === `five-elements-${element}`;
+      }))
       .sort((a, b) => {
         const left = a.shopifyHandle || a.id;
         const right = b.shopifyHandle || b.id;
