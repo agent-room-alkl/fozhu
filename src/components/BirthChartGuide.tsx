@@ -66,7 +66,7 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
   const locationLookupId = useRef(0);
   const matchedBirthplace = useRef<BirthplaceSuggestion | null>(null);
   const autoStartedRef = useRef(false);
-  const recommendedElement = reading?.beadRecommendation.element || reading?.elementFocus || null;
+  const recommendedElement = reading?.beadRecommendation.element || null;
 
   const runReading = useCallback(async (details: BirthDetails) => {
     controllerRef.current?.abort();
@@ -119,25 +119,19 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
 
   const recommendedProducts = useMemo(() => {
     if (!recommendedElement) return [];
-    const related = products.filter((product) => {
-      const explicit = product.shopifyTags?.some((tag) => tag === `element-${recommendedElement.toLowerCase()}` || tag === `five-elements-${recommendedElement.toLowerCase()}`);
-      if (explicit) return true;
-      const text = `${product.name} ${product.category} ${product.description}`.toLowerCase();
-      switch (recommendedElement) {
-        case 'Wood': return /wood|bodhi|seed/.test(text);
-        case 'Fire': return /red|amber|tiger eye|warm/.test(text);
-        case 'Earth': return /tiger eye|bodhi|seed|natural stone/.test(text);
-        case 'Metal': return /howlite|white|silver|light/.test(text);
-        case 'Water': return /obsidian|lava|black|dark/.test(text);
-        default: return true;
-      }
-    });
-    return (related.length ? related : products).slice(0, 3);
-  }, [reading, recommendedElement, products]);
+    return products
+      .filter((product) => product.shopifyTags?.some((tag) => tag === `element-${recommendedElement.toLowerCase()}` || tag === `five-elements-${recommendedElement.toLowerCase()}`))
+      .sort((a, b) => {
+        const left = a.shopifyHandle || a.id;
+        const right = b.shopifyHandle || b.id;
+        return left < right ? -1 : left > right ? 1 : 0;
+      })
+      .slice(0, 3);
+  }, [recommendedElement, products]);
   const featuredRecommendation = recommendedProducts[0];
   const additionalRecommendations = recommendedProducts.slice(1);
-  const recommendationReason = reading?.beadRecommendation.rationale || `A symbolic style direction based on the ${recommendedElement} theme.`;
-  const recommendationMaterials = reading?.beadRecommendation.materials.join(' · ') || reading?.materialSuggestions.join(' · ') || (recommendedElement ? ELEMENT_MATERIALS[recommendedElement] : '');
+  const recommendationReason = recommendedElement ? `A consistent ${recommendedElement} styling direction, selected from the visible and hidden stems in your chart.` : '';
+  const recommendationMaterials = reading?.beadRecommendation.materials.join(' · ') || (recommendedElement ? ELEMENT_MATERIALS[recommendedElement] : '');
   const recommendationColours = reading?.beadRecommendation.colours || [];
 
   const lookupBirthplaceTimezone = async (place: string): Promise<BirthTimezoneMatch | null> => {
@@ -272,7 +266,7 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
               return <tr key={pillar} className="border-b border-[#F0EBE5] align-top"><th className="py-3 pr-3 font-semibold capitalize text-[#321a0f]">{pillar}</th><td className="py-3 pr-3"><span className="font-serif text-xl text-[#321a0f]">{chars[0] || '—'}</span>{stem && <span className="ml-2 text-xs text-[#625650]">{stem.pinyin} · {stem.polarity} {stem.element}</span>}</td><td className="py-3 pr-3"><span className="font-serif text-xl text-[#321a0f]">{chars[1] || '—'}</span>{branch && <span className="ml-2 text-xs text-[#625650]">{branch.pinyin} · {branch.animal}</span>}</td><td className="py-3 pr-3">{structure?.hiddenStems.map((hidden, index) => { const hiddenStem = HEAVENLY_STEMS[hidden]; const god = structure.hiddenTenGods[index]; return <div key={`${hidden}-${index}`} className="mb-1 last:mb-0"><span className="font-serif text-base text-[#321a0f]">{hidden}</span><span className="ml-1 text-xs text-[#625650]">{hiddenStem?.pinyin} · {hiddenStem?.element}</span></div>; }) || '—'}</td><td className="py-3">{visibleGod ? <span className="inline-flex rounded-full bg-[#F3EFEA] px-2 py-1 text-xs text-[#504440]">{visibleGod}{pillar !== 'day' && structure?.visibleTenGod ? ` (${TEN_GOD_ENGLISH[structure.visibleTenGod] || ''})` : ''}</span> : '—'}{structure?.hiddenTenGods.map((god, index) => god ? <div key={`${god}-${index}`} className="mt-1 text-xs text-[#625650]">{god} · {TEN_GOD_ENGLISH[god] || 'Day Master'}</div> : null)}</td></tr>;
             })}</tbody></table></div></section>
             <section className="rounded-xl border border-[#d9c9af] bg-[#fffaf1] p-5 sm:p-7"><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#87612d]">The reading in brief</p><h3 className="mt-2 font-serif text-2xl text-[#321a0f]">Your BaZi conclusion</h3><p className="mt-3 max-w-4xl text-sm leading-7 text-[#504440]">{reading.conclusion || reading.themes.overview}</p></section>
-            <section className="rounded-xl border border-[#EAE4DC] bg-white p-5 sm:p-7"><div><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Element assessment</p><h3 className="mt-1 font-serif text-2xl text-[#321a0f]">What appears low — and what may help balance it</h3></div><p className="mt-3 text-sm leading-6 text-[#625650]">{reading.elementDiagnosis.rationale}</p><div className="mt-5 grid md:grid-cols-3 gap-4"><div className="rounded-lg bg-[#F7F3EF] p-4"><h4 className="text-xs uppercase tracking-wider font-semibold text-[#82746f]">Absent in the full chart</h4><p className="mt-2 font-semibold text-[#321a0f]">{reading.elementDiagnosis.absentElements.length ? reading.elementDiagnosis.absentElements.join(' · ') : 'No clear absence identified'}</p></div><div className="rounded-lg bg-[#F7F3EF] p-4"><h4 className="text-xs uppercase tracking-wider font-semibold text-[#82746f]">Relatively low</h4><p className="mt-2 font-semibold text-[#321a0f]">{reading.elementDiagnosis.lowerElements.length ? reading.elementDiagnosis.lowerElements.join(' · ') : 'No strong low-element signal'}</p></div><div className="rounded-lg bg-[#F7F3EF] p-4"><h4 className="text-xs uppercase tracking-wider font-semibold text-[#82746f]">Potentially supportive</h4><p className="mt-2 font-semibold text-[#321a0f]">{reading.elementDiagnosis.supportiveElements.length ? reading.elementDiagnosis.supportiveElements.join(' · ') : 'No single element selected'}</p></div></div><p className="mt-4 text-xs leading-5 text-[#82746f]">A low or absent element is not automatically the element to strengthen. The traditional reading also weighs the season, roots and overall balance.</p></section>
+            <section className="rounded-xl border border-[#EAE4DC] bg-white p-5 sm:p-7"><div><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Element assessment</p><h3 className="mt-1 font-serif text-2xl text-[#321a0f]">Your chart’s Five Element profile</h3></div><p className="mt-3 text-sm leading-6 text-[#625650]">{reading.elementDiagnosis.rationale}</p><div className="mt-5 grid md:grid-cols-3 gap-4"><div className="rounded-lg bg-[#F7F3EF] p-4"><h4 className="text-xs uppercase tracking-wider font-semibold text-[#82746f]">Absent in the full chart</h4><p className="mt-2 font-semibold text-[#321a0f]">{reading.elementDiagnosis.absentElements.length ? reading.elementDiagnosis.absentElements.join(' · ') : 'No clear absence identified'}</p></div><div className="rounded-lg bg-[#F7F3EF] p-4"><h4 className="text-xs uppercase tracking-wider font-semibold text-[#82746f]">Lowest count</h4><p className="mt-2 font-semibold text-[#321a0f]">{reading.elementDiagnosis.lowerElements.length ? reading.elementDiagnosis.lowerElements.join(' · ') : 'See chart profile'}</p></div><div className="rounded-lg bg-[#F7F3EF] p-4"><h4 className="text-xs uppercase tracking-wider font-semibold text-[#82746f]">Consistent style match</h4><p className="mt-2 font-semibold text-[#321a0f]">{reading.beadRecommendation.element || 'Not available'}</p></div></div><p className="mt-4 text-xs leading-5 text-[#82746f]">This fixed counting rule keeps product styling consistent between readings. An absent or low element is not automatically a classical useful element; treat this as a cultural style reference.</p></section>
             <section className="rounded-xl border border-[#EAE4DC] bg-white p-5 sm:p-7">
               <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Relative chart composition</p><h3 className="mt-1 font-serif text-2xl text-[#321a0f]">Your Five Elements at a glance</h3></div><p className="text-xs text-[#82746f]">Symbolic balance · not a scientific measurement</p></div>
               <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-5 gap-3">{ELEMENTS_DATA.map((element) => {

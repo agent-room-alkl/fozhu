@@ -87,6 +87,51 @@ const STEM_ENGLISH = {
   '己': 'Ji (Yin Earth)', '庚': 'Geng (Yang Metal)', '辛': 'Xin (Yin Metal)', '壬': 'Ren (Yang Water)', '癸': 'Gui (Yin Water)',
 };
 
+const FIVE_ELEMENTS = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
+const ELEMENT_STYLE = {
+  Wood: { materials: ['wood beads', 'natural seed beads'], colours: ['green', 'teal'], note: 'A wood-themed styling direction based on visible and hidden stems.' },
+  Fire: { materials: ['warm-toned beads', 'natural stone beads'], colours: ['red', 'coral', 'amber tones'], note: 'A fire-themed styling direction based on visible and hidden stems.' },
+  Earth: { materials: ['earth-toned beads', 'natural stone beads'], colours: ['ochre', 'sand', 'brown'], note: 'An earth-themed styling direction based on visible and hidden stems.' },
+  Metal: { materials: ['light-toned beads', 'simple metal accents'], colours: ['white', 'silver', 'pale grey'], note: 'A metal-themed styling direction based on visible and hidden stems.' },
+  Water: { materials: ['dark-toned beads', 'natural stone beads'], colours: ['black', 'navy', 'deep blue'], note: 'A water-themed styling direction based on visible and hidden stems.' },
+};
+
+function deriveElementProfile(chartStructure) {
+  const counts = Object.fromEntries(FIVE_ELEMENTS.map((element) => [element, 0]));
+  for (const pillar of Object.values(chartStructure || {})) {
+    if (!pillar) continue;
+    for (const stem of [pillar.stem, ...(pillar.hiddenStems || [])]) {
+      const element = STEM_ENGLISH[stem]?.match(/\((?:Yang|Yin) (Wood|Fire|Earth|Metal|Water)\)/)?.[1];
+      if (element) counts[element] += 1;
+    }
+  }
+
+  const absentElements = FIVE_ELEMENTS.filter((element) => counts[element] === 0);
+  const lowestCount = Math.min(...FIVE_ELEMENTS.map((element) => counts[element]));
+  const lowerElements = FIVE_ELEMENTS.filter((element) => counts[element] === lowestCount && lowestCount > 0);
+  // Stable tie-break: use the fixed Five Element order whenever several are absent or tied.
+  const recommendedElement = absentElements[0] || lowerElements[0] || FIVE_ELEMENTS[0];
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0) || 1;
+  const rawScores = FIVE_ELEMENTS.map((element) => (counts[element] / total) * 100);
+  const scores = rawScores.map(Math.floor);
+  let remainder = 100 - scores.reduce((sum, score) => sum + score, 0);
+  const remainderOrder = rawScores.map((score, index) => ({ index, fraction: score - Math.floor(score) }))
+    .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+  for (let index = 0; index < remainder; index += 1) scores[remainderOrder[index].index] += 1;
+
+  return {
+    counts,
+    absentElements,
+    lowerElements,
+    recommendedElement,
+    elementBalance: FIVE_ELEMENTS.map((element, index) => ({
+      element,
+      score: scores[index],
+      note: `${counts[element]} of ${total} counted visible and hidden stems.`,
+    })),
+  };
+}
+
 function asList(value) {
   return Array.isArray(value) ? value.map(String) : String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean);
 }
@@ -217,19 +262,10 @@ function sanitizeReading(result, authoritativeChart) {
   if (!result || result.status !== 'aligned') return reviewResult(authoritativeChart);
   const themes = result.themes && typeof result.themes === 'object' ? result.themes : {};
   if (!themes.overview || !themes.personality || !themes.relationships || !themes.careerAndMoney || !themes.familyAndFriends || !themes.growthFocus) return reviewResult(authoritativeChart);
-  const elements = ['Wood', 'Fire', 'Earth', 'Metal', 'Water', 'Mixed'];
-  const fiveElements = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
-  const elementBalance = Array.isArray(result.elementBalance) ? result.elementBalance
-    .filter((item) => fiveElements.includes(item?.element) && Number.isFinite(item.score))
-    .slice(0, 5)
-    .map((item) => ({ element: item.element, score: Math.max(0, Math.min(100, Math.round(item.score))), note: String(item.note || '').slice(0, 220) })) : [];
-  if (elementBalance.length !== 5) return reviewResult(authoritativeChart);
-  const balanceTotal = elementBalance.reduce((sum, item) => sum + item.score, 0);
-  if (balanceTotal < 95 || balanceTotal > 105) return reviewResult(authoritativeChart);
+  const profile = deriveElementProfile(authoritativeChart.chartStructure);
+  const elementBalance = profile.elementBalance;
   const list = (value, limit, mapper) => Array.isArray(value) ? value.slice(0, limit).map(mapper) : [];
-  const validFiveElement = (value) => fiveElements.includes(value);
-  const diagnosis = result.elementDiagnosis || {};
-  const recommendation = result.beadRecommendation || {};
+  const style = ELEMENT_STYLE[profile.recommendedElement];
   const advice = result.lifestyleAdvice || {};
   return {
     status: 'aligned',
@@ -238,19 +274,19 @@ function sanitizeReading(result, authoritativeChart) {
     dayMaster: authoritativeChart.dayMaster,
     season: typeof result.season === 'string' ? customerEnglish(result.season, 180) : null,
     seasonalClimate: typeof result.seasonalClimate === 'string' ? customerEnglish(result.seasonalClimate) : '',
-    elementFocus: elements.includes(result.elementFocus) ? result.elementFocus : null,
+    elementFocus: profile.recommendedElement,
     conclusion: customerEnglish(result.conclusion, 800),
     elementDiagnosis: {
-      absentElements: list(diagnosis.absentElements, 5, (value) => customerEnglish(value, 20)).filter(validFiveElement),
-      lowerElements: list(diagnosis.lowerElements, 5, (value) => customerEnglish(value, 20)).filter(validFiveElement),
-      supportiveElements: list(diagnosis.supportiveElements, 3, (value) => customerEnglish(value, 20)).filter(validFiveElement),
-      rationale: customerEnglish(diagnosis.rationale, 500),
+      absentElements: profile.absentElements,
+      lowerElements: profile.lowerElements,
+      supportiveElements: [profile.recommendedElement],
+      rationale: `For consistent product styling, this guide counts visible and hidden stems in the supplied chart. ${profile.recommendedElement} is selected using a fixed rule: the first absent element in Wood, Fire, Earth, Metal, Water order; if none is absent, the first least-counted element. This is a cultural styling reference, not a classical useful-element determination.`,
     },
     beadRecommendation: {
-      element: validFiveElement(recommendation.element) ? recommendation.element : (elements.includes(result.elementFocus) ? result.elementFocus : null),
-      materials: list(recommendation.materials, 3, (value) => customerEnglish(value, 100)),
-      colours: list(recommendation.colours, 3, (value) => customerEnglish(value, 60)),
-      rationale: customerEnglish(recommendation.rationale, 500),
+      element: profile.recommendedElement,
+      materials: style.materials,
+      colours: style.colours,
+      rationale: style.note,
     },
     lifestyleAdvice: {
       wearing: customerEnglish(advice.wearing, 320),
@@ -258,7 +294,7 @@ function sanitizeReading(result, authoritativeChart) {
       relationships: customerEnglish(advice.relationships, 320),
       decisions: customerEnglish(advice.decisions, 320),
     },
-    elementBalance: elementBalance.map((item) => ({ ...item, note: customerEnglish(item.note, 220) })),
+    elementBalance,
     luckCycles: list(result.luckCycles, 3, (item) => ({ period: customerEnglish(item.period, 40), score: Math.max(1, Math.min(5, Math.round(Number(item.score) || 1))), theme: customerEnglish(item.theme, 280), supportiveElement: typeof item.supportiveElement === 'string' ? customerEnglish(item.supportiveElement, 30) : null })),
     annualOutlook: list(result.annualOutlook, 5, (item) => ({ year: Number(item.year) || new Date().getFullYear(), score: Math.max(1, Math.min(5, Math.round(Number(item.score) || 1))), theme: customerEnglish(item.theme, 280), opportunity: customerEnglish(item.opportunity, 180), caution: customerEnglish(item.caution, 180) })),
     monthlyOutlook: list(result.monthlyOutlook, 12, (item) => ({ month: customerEnglish(item.month, 20), score: Math.max(1, Math.min(5, Math.round(Number(item.score) || 1))), theme: customerEnglish(item.theme, 220) })),
@@ -280,7 +316,8 @@ export async function generateBaziReading(input, apiKey, modelConfig = {}) {
   const birthTimeRange = details.birthTime ? `${details.birthTime}–${nextHour}:00` : 'not provided';
   const currentYear = new Date().getUTCFullYear();
   const authoritativeChart = calculateFourPillars(details);
-  const userPrompt = `Interpret these birth details using the authoritative chart structure below. The chart and all rule-derived fields are final: do not recalculate, alter, or replace any pillar, hidden stem, or Ten God. In particular, use the supplied Hidden Stems and Ten Gods exactly as given.\n\nGregorian date: ${details.birthDate}\nLocal birth-time range: ${birthTimeRange}\nBirthplace: ${details.birthplace || 'not provided'}\nIANA time zone at birth: ${details.timeZone}\nGender (optional): ${details.gender === 'prefer_not_to_say' ? 'not provided' : details.gender}\nCurrent calendar year for outlooks: ${currentYear}\n\nAuthoritative rule-calculated chart (lunar-javascript):\n${JSON.stringify(authoritativeChart, null, 2)}\n\nThe selected interval is one complete traditional two-hour period. If no interval was supplied, the authoritative hour pillar is null. Interpret this fixed chart with traditional Di Tian Sui and seasonal climate principles; explain reasoning from the actual Day Master, season, roots, and interactions. For the element diagnosis, separately identify truly absent elements and relatively low elements by examining all visible and hidden stems. Do not call the lowest percentage the useful element automatically. Name the element or elements that may be supportive based on season and chart balance. Add a concise overall conclusion, bead material and colour recommendations, and practical non-medical advice about clothing, ordinary food habits, friendships, and handling decisions. Describe Five Elements and BaZi as Chinese cultural heritage and the reading as a reference for personal reflection only. Never say that a product or element fixes a chart or causes luck, protection, health, energy, relationship, career or financial outcomes. Keep every customer-facing field in English except four pillar values. Do not frame lifestyle suggestions as treatment or guaranteed fate changes. Return the requested JSON only.`;
+  const profile = deriveElementProfile(authoritativeChart.chartStructure);
+  const userPrompt = `Interpret these birth details using the authoritative chart structure below. The chart and all rule-derived fields are final: do not recalculate, alter, or replace any pillar, hidden stem, or Ten God. In particular, use the supplied Hidden Stems and Ten Gods exactly as given.\n\nGregorian date: ${details.birthDate}\nLocal birth-time range: ${birthTimeRange}\nBirthplace: ${details.birthplace || 'not provided'}\nIANA time zone at birth: ${details.timeZone}\nGender (optional): ${details.gender === 'prefer_not_to_say' ? 'not provided' : details.gender}\nCurrent calendar year for outlooks: ${currentYear}\n\nAuthoritative rule-calculated chart (lunar-javascript):\n${JSON.stringify(authoritativeChart, null, 2)}\n\nFixed product styling profile: ${JSON.stringify(profile)}. The backend exclusively chooses this styling element, its palette and matching products; do not substitute a different bead recommendation or claim this is a classical useful-element determination. The selected interval is one complete traditional two-hour period. If no interval was supplied, the authoritative hour pillar is null. Interpret this fixed chart with traditional Di Tian Sui and seasonal climate principles; explain reasoning from the actual Day Master, season, roots, and interactions. Provide cautious cultural interpretation and practical non-medical advice about clothing, ordinary food habits, friendships, and handling decisions. Describe Five Elements and BaZi as Chinese cultural heritage and the reading as a reference for personal reflection only. Never say that a product or element fixes a chart or causes luck, protection, health, energy, relationship, career or financial outcomes. Keep every customer-facing field in English except four pillar values. Do not frame lifestyle suggestions as treatment or guaranteed fate changes. Return the requested JSON only.`;
 
   const reading = await askClaude({ apiKey, model, system: MODEL_INSTRUCTIONS, user: userPrompt, outputTokens: 16000 });
   return sanitizeReading(reading, authoritativeChart);
