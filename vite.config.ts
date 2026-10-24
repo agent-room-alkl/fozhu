@@ -87,7 +87,7 @@ function geoCountryPlugin() {
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    plugins: [react(), tailwindcss(), baziApiPlugin(env.AI_GATEWAY_API_KEY, env.BAZI_CLAUDE_MODEL), geoCountryPlugin()],
+    plugins: [react(), tailwindcss(), baziApiPlugin(env.CLAUDE_API_KEY, env.BAZI_CLAUDE_MODEL), geoCountryPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

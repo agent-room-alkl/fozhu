@@ -36,7 +36,7 @@ export default async function handler(req: any, res: any) {
   if (isRateLimited(req)) return res.status(429).json({ message: 'Too many attempts. Please wait a little before trying again.' });
 
   try {
-    const result = await generateBaziReading(req.body, process.env.AI_GATEWAY_API_KEY, {
+    const result = await generateBaziReading(req.body, process.env.CLAUDE_API_KEY, {
       claude: process.env.BAZI_CLAUDE_MODEL,
     });
     return res.status(200).json(result);

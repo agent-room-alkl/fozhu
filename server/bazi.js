@@ -1,7 +1,7 @@
 import { Solar } from 'lunar-javascript';
 
-const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
-const CLAUDE_MODEL_ID = 'anthropic/claude-sonnet-5.5';
+const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
+const CLAUDE_MODEL_ID = 'claude-sonnet-5-5';
 
 const MODEL_INSTRUCTIONS = `Prepare a detailed but cautious, traditional BaZi cultural reading for an English-speaking customer. Write all customer-facing prose in English. Use Chinese terms such as 食神 when explaining the chart, followed by a clear English gloss. Do not recalculate, alter, or contradict the authoritative Four Pillars and chart structure supplied by the user message; a deterministic calendar library has already computed them.
 
@@ -132,35 +132,34 @@ function calculateFourPillars(details) {
   };
 }
 
-async function askGateway({ apiKey, model, system, user, outputTokens }) {
-  const response = await fetch(GATEWAY_URL, {
+async function askClaude({ apiKey, model, system, user, outputTokens }) {
+  const response = await fetch(ANTHROPIC_MESSAGES_URL, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-      max_completion_tokens: outputTokens,
+      system,
+      messages: [{ role: 'user', content: user }],
+      max_tokens: outputTokens,
+      output_config: { effort: 'medium' },
     }),
     signal: AbortSignal.timeout(180000),
   });
   if (!response.ok) {
     // Do not relay provider bodies; they can contain internal request details.
-    throw new Error(`AI Gateway request failed (${response.status}) for ${model}.`);
+    throw new Error(`Anthropic API request failed (${response.status}) for ${model}.`);
   }
   const payload = await response.json();
-  const choice = payload?.choices?.[0];
-  const content = choice?.message?.content;
-  const text = Array.isArray(content) ? content.map((part) => part.text || '').join('\n') : content;
+  const content = payload?.content;
+  const text = Array.isArray(content) ? content.filter((part) => part?.type === 'text').map((part) => part.text || '').join('\n') : '';
   if (typeof text !== 'string' || !text.trim()) {
-    const finishReason = choice?.finish_reason || 'unknown';
-    const usage = payload?.usage?.completion_tokens;
-    throw new Error(`${model} returned no text (finish_reason=${finishReason}, completion_tokens=${usage ?? 'unknown'}).`);
+    const stopReason = payload?.stop_reason || 'unknown';
+    const usage = payload?.usage?.output_tokens;
+    throw new Error(`${model} returned no text (stop_reason=${stopReason}, output_tokens=${usage ?? 'unknown'}).`);
   }
   return parseJsonObject(text, model);
 }
@@ -276,7 +275,10 @@ function sanitizeReading(result, authoritativeChart) {
 
 export async function generateBaziReading(input, apiKey, modelConfig = {}) {
   if (!apiKey) throw badRequest('The reading service is not configured yet.', 503);
-  const model = modelConfig.claude || CLAUDE_MODEL_ID;
+  const configuredModel = modelConfig.claude;
+  const model = !configuredModel || configuredModel === 'anthropic/claude-sonnet-5.5'
+    ? CLAUDE_MODEL_ID
+    : configuredModel.replace(/^anthropic\//, '');
   const details = validateBirthDetails(input);
   const nextHour = details.birthTime ? String((Number(details.birthTime.slice(0, 2)) + 2) % 24).padStart(2, '0') : '';
   const birthTimeRange = details.birthTime ? `${details.birthTime}–${nextHour}:00` : 'not provided';
@@ -284,17 +286,17 @@ export async function generateBaziReading(input, apiKey, modelConfig = {}) {
   const authoritativeChart = calculateFourPillars(details);
   const userPrompt = `Interpret these birth details using the authoritative chart structure below. The chart and all rule-derived fields are final: do not recalculate, alter, or replace any pillar, hidden stem, or Ten God. In particular, use the supplied Hidden Stems and Ten Gods exactly as given.\n\nGregorian date: ${details.birthDate}\nLocal birth-time range: ${birthTimeRange}\nBirthplace: ${details.birthplace || 'not provided'}\nIANA time zone at birth: ${details.timeZone}\nGender (optional): ${details.gender === 'prefer_not_to_say' ? 'not provided' : details.gender}\nCurrent calendar year for outlooks: ${currentYear}\n\nAuthoritative rule-calculated chart (lunar-javascript):\n${JSON.stringify(authoritativeChart, null, 2)}\n\nThe selected interval is one complete traditional two-hour period. If no interval was supplied, the authoritative hour pillar is null. Interpret this fixed chart with traditional Di Tian Sui and seasonal climate principles; explain reasoning from the actual Day Master, season, roots, and interactions. For the element diagnosis, separately identify truly absent elements and relatively low elements by examining all visible and hidden stems. Do not call the lowest percentage the useful element automatically. Name the element or elements that may be supportive based on season and chart balance. Add a concise overall conclusion, bead material and colour recommendations, and practical non-medical advice about clothing, food habits, friendships, and handling decisions. Keep every customer-facing field in English except four pillar values. Do not frame lifestyle suggestions as health treatment or guaranteed fate changes. Return the requested JSON only.`;
 
-  const reading = await askGateway({ apiKey, model, system: MODEL_INSTRUCTIONS, user: userPrompt, outputTokens: 8000 });
+  const reading = await askClaude({ apiKey, model, system: MODEL_INSTRUCTIONS, user: userPrompt, outputTokens: 16000 });
   return sanitizeReading(reading, authoritativeChart);
 }
 
 export function publicError(error) {
   if (error?.status && error.status < 500) return { status: error.status, message: error.message };
-  if (String(error?.message || '').includes('AI Gateway request failed (401)')) return { status: 502, message: 'The reading service could not authenticate. Please contact support.' };
-  if (String(error?.message || '').includes('AI Gateway request failed (400)')) return { status: 502, message: 'The AI provider rejected the reading request format. Please try again later.' };
-  if (String(error?.message || '').includes('AI Gateway request failed (403)') && String(error?.message || '').includes('anthropic/claude-sonnet-5.5')) return { status: 502, message: 'Claude Sonnet 5.5 is blocked by your Vercel team model allowlist. A team owner must enable it in AI Gateway Settings before readings can run.' };
-  if (String(error?.message || '').includes('AI Gateway request failed (403)')) return { status: 502, message: 'The reading service cannot access one or more AI models. Please check model access and provider setup in Vercel AI Gateway.' };
-  if (String(error?.message || '').includes('AI Gateway request failed (404)')) return { status: 502, message: 'A requested AI model is not available through this Gateway configuration.' };
-  if (String(error?.message || '').includes('AI Gateway request failed (429)')) return { status: 503, message: 'The reading service is busy. Please try again shortly.' };
+  if (String(error?.message || '').includes('Anthropic API request failed (401)')) return { status: 502, message: 'The Claude API key could not authenticate. Check CLAUDE_API_KEY in the deployment environment.' };
+  if (String(error?.message || '').includes('Anthropic API request failed (400)')) return { status: 502, message: 'Claude rejected the reading request format. Please try again later.' };
+  if (String(error?.message || '').includes('Anthropic API request failed (403)')) return { status: 502, message: 'The Claude API key does not have access to this model. Check the key and model access in Anthropic Console.' };
+  if (String(error?.message || '').includes('Anthropic API request failed (404)')) return { status: 502, message: 'The configured Claude model is not available. Check BAZI_CLAUDE_MODEL in the deployment environment.' };
+  if (String(error?.message || '').includes('Anthropic API request failed (429)')) return { status: 503, message: 'Claude is busy or the API rate limit was reached. Please try again shortly.' };
+  if (String(error?.message || '').includes('Anthropic API request failed (5')) return { status: 503, message: 'Claude is temporarily unavailable. Please try again shortly.' };
   return { status: 502, message: 'We could not complete your reading right now. Please try again shortly.' };
 }
