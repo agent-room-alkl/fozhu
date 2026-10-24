@@ -136,29 +136,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="shrink-0 text-[10px] text-[#82746f]">About 30 seconds</span>
             </div>
 
-            <div className="grid grid-cols-1 items-start gap-3">
-              <label className="min-w-0 text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
-                Date of birth <span className="text-[#a64c37]">*</span>
-                <BirthDateField compact value={birthDate} onChange={setBirthDate} />
-              </label>
+            <label className="block min-w-0 text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
+              Date of birth <span className="text-[#a64c37]">*</span>
+              <BirthDateField compact value={birthDate} onChange={setBirthDate} />
+            </label>
+
+            <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
               <label className="min-w-0 text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
                 Birth time <span className="font-normal normal-case tracking-normal text-[#82746f]">(optional)</span>
-                <select value={birthTime} onChange={(event) => setBirthTime(event.target.value)} className="mt-1.5 min-w-0 w-full rounded-md border border-[#ded4ca] bg-white px-1.5 py-[11px] text-[12px] font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E] sm:px-2.5 sm:text-sm">
+                <select value={birthTime} onChange={(event) => setBirthTime(event.target.value)} className="mt-1.5 min-w-0 w-full rounded-md border border-[#ded4ca] bg-white px-1.5 py-[11px] text-[11px] font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E] sm:px-2">
                   <option value="">Not sure / skip</option>
                   {BIRTH_TIME_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
                 <span className="mt-1 block text-[9px] font-normal normal-case tracking-normal text-[#82746f]">Choose one complete traditional two-hour period.</span>
               </label>
-            </div>
 
-            <label className="mt-2.5 block text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
-              Gender <span className="font-normal normal-case tracking-normal text-[#82746f]">(optional)</span>
-              <select value={gender} onChange={(event) => setGender(event.target.value as BirthDetails['gender'] | '')} className="mt-1.5 w-full rounded-md border border-[#ded4ca] bg-white px-2.5 py-2.5 text-sm font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]">
-                <option value="">Prefer not to say</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-              </select>
-            </label>
+              <label className="block min-w-0 text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
+                Gender <span className="font-normal normal-case tracking-normal text-[#82746f]">(optional)</span>
+                <select value={gender} onChange={(event) => setGender(event.target.value as BirthDetails['gender'] | '')} className="mt-1.5 w-full rounded-md border border-[#ded4ca] bg-white px-2 py-2.5 text-[12px] font-normal normal-case tracking-normal text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]">
+                  <option value="">Prefer not to say</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </label>
+            </div>
 
             <label className="mt-2.5 block text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
               Birthplace or region
