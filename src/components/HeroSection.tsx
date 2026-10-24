@@ -163,7 +163,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <label className="mt-2.5 block text-[10px] font-semibold uppercase tracking-wider text-[#675a51]">
               Birthplace or region
               <span className="relative mt-1.5 block">
-                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-[#9a8875]">location_on</span>
                 <BirthplaceAutocomplete id="hero-birthplace" value={birthplace} onChange={(value) => { setBirthplace(value); matchedBirthplace.current = null; locationEdited.current = true; setTimeZoneStatus('Start typing to choose a city and country.'); }} onSelect={(place) => { matchedBirthplace.current = place; setBirthplace(place.location); setTimeZone(place.timeZone); setTimeZoneStatus('City matched · time zone set automatically.'); locationEdited.current = true; }} placeholder={locationSource === 'detecting' ? 'Detecting your region…' : 'Type a city name'} className="w-full rounded-md border border-[#ded4ca] bg-white py-2.5 pr-3 text-sm font-normal normal-case tracking-normal text-[#321a0f] placeholder:text-[#a69b91] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]" leadingIcon />
               </span>
             </label>
