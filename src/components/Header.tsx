@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-4 w-full px-4 lg:px-8 max-w-7xl mx-auto py-3">
 
         <button onClick={() => onNavigate('home')} aria-label="Fozhu home" className="shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E1BD7E]">
-          <img src="/assets/fozhu-five-elements.svg" alt="Fozhu · Five Elements Bead Guide" className="h-11 w-auto" />
+          <img src="/assets/fozhu-five-elements.svg" alt="Fozhu · Five Elements Bead Guide" className="h-12 w-auto sm:h-14" />
         </button>
 
         {/* Navigation Links (Desktop) */}
