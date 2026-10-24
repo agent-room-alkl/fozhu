@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+const measurementId = (import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-FMN00BW933').trim();
 const preferenceKey = 'fozhu-analytics-choice';
 
 function enableAnalytics() {
