@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "source": "/cart/:path*",
+      "destination": "https://qxn57z-ep.myshopify.com/cart/:path*",
+      "statusCode": 307,
+      "preserveQueryParams": true
+    }
+  ],
   "rewrites": [
     { "source": "/products/:handle", "destination": "/" },
     { "source": "/pages/:slug", "destination": "/" }
