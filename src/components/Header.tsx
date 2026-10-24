@@ -29,6 +29,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 border-b border-[#EAE4DC] backdrop-blur-md transition-all">
       <div className="flex items-center gap-4 w-full px-4 lg:px-8 max-w-7xl mx-auto py-3">
 
+        <button onClick={() => onNavigate('home')} aria-label="Fozhu home" className="shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E1BD7E]">
+          <img src="/assets/fozhu-five-elements.svg" alt="Fozhu · Five Elements Bead Guide" className="h-11 w-auto" />
+        </button>
+
         {/* Navigation Links (Desktop) */}
         <nav className="hidden lg:flex min-w-0 items-center gap-3 xl:gap-5 text-[10px] xl:text-[11px] font-sans tracking-wide uppercase">
           <button

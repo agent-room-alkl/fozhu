@@ -1,6 +1,7 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import { BirthDetails, Currency } from '../types';
 import { inferBirthTimezone } from '../utils/birthTimezone';
+import { ElementMark } from './ElementMark';
 
 interface HeroSectionProps {
   currency: Currency;
@@ -202,7 +203,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         <button onClick={onQuickViewHeroItem} className="group mt-6 inline-flex w-fit items-center gap-3 rounded-full border border-white/30 bg-[#211713]/65 px-3 py-2 text-left text-white backdrop-blur-md transition-colors hover:bg-[#211713]/85 sm:mt-8 lg:absolute lg:bottom-8 lg:right-8 lg:mt-0">
-          <span className="material-symbols-outlined flex h-9 w-9 items-center justify-center rounded-full bg-[#E1BD7E] text-[#321a0f]">spa</span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E1BD7E] p-1.5 text-[#321a0f]">
+            <ElementMark className="block h-full w-full" />
+          </span>
           <span>
             <span className="block text-[11px] font-semibold">Aged Hainan Wild Agarwood 108 Mala</span>
             <span className="block text-[10px] text-white/70">Naturally resinous · Temple sanctified</span>
