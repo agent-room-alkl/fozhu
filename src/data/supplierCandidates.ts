@@ -1,0 +1,51 @@
+/** Supplier research saved for review; intentionally excluded from the retail catalog. */
+export const FIVE_ELEMENTS_CRYSTAL_CANDIDATE = {
+  title: "Five Elements Women's Natural Crystal Bracelet Yellow Crystal Attracts Wealth Good Fortune Handmade Perfect Gift For Girlfriend",
+  supplier: 'Yiwu Moo Jewelry Co., Ltd.',
+  supplierUrl: 'https://cn1522919867xldc.m.en.alibaba.com/',
+  productUrl: 'https://www.alibaba.com/product-detail/Five-Elements-Women-s-Natural-Crystal_1601802282030.html',
+  modelNumber: 'SL001353',
+  moq: '2 pieces',
+  retailEligibleUnderNZD4CostCap: false,
+  variants: [
+    { name: '8mm hydrating five elements bracelet', supplierCostNZD: 6.40 },
+    { name: 'Five elements metal-enhancing double circle bracelet', supplierCostNZD: 6.91 },
+    { name: '10mm hydrating five elements bracelet', supplierCostNZD: 8.57 },
+    { name: 'Five elements wood-nourishing double circle bracelet', supplierCostNZD: 9.95 },
+    { name: '10mm wood-imitation five elements bracelet', supplierCostNZD: 8.57 },
+    { name: '8mm fire-replenishing five elements bracelet', supplierCostNZD: 6.40 },
+    { name: '8mm gold-filled five elements bracelet', supplierCostNZD: 5.62 },
+    { name: '10mm feng shui five elements bracelet', supplierCostNZD: 6.06 },
+    { name: '8mm soil-filling five elements bracelet', supplierCostNZD: 6.06 },
+    { name: 'Five elements earth-enhancing double circle bracelet', supplierCostNZD: 9.56 },
+    { name: 'Five elements hydrating double circle bracelet', supplierCostNZD: 13.61 },
+    { name: '10mm tianshi beads five elements bracelet', supplierCostNZD: 8.88 },
+    { name: '8mm wood-filling five elements bracelet', supplierCostNZD: 7.05 },
+    { name: '10mm fire-element-enhancing five elements bracelet', supplierCostNZD: 10.60 },
+    { name: 'Five elements fire-enhancing double circle bracelet', supplierCostNZD: 8.88 },
+  ],
+  notes: 'All listed variants exceed the NZ$4 supplier-cost ceiling. Supplier price snapshot; shipping and final terms to be confirmed.',
+} as const;
+
+export const EIGHTEEN_SEED_CRYSTAL_CANDIDATE = {
+  title: 'Wholesale 18 Seed Crystal Five Elements Multi-treasure Bracelet Missing Wood Replenishment Wood Balance Energy Bracelet',
+  supplier: 'Lianyungang Baisui Crystal Jewelry Co., Ltd.',
+  supplierUrl: 'https://baisuicrystal.m.en.alibaba.com/',
+  productUrl: 'https://www.alibaba.com/product-detail/Wholesale-18-Seed-Crystal-Five-Elements_1601103404787.html',
+  modelNumber: '326595',
+  moq: 'Listing header: 1 bag; specification: 2 pcs (confirm with supplier)',
+  retailEligibleUnderNZD4CostCap: false,
+  variants: [
+    { supplierSku: 'Z716', name: 'Five-Element Wood Tobo Bracelet (Lady)', size: 'One Size', supplierCostNZD: 18.11 },
+    { supplierSku: 'Z717', name: 'Five-Element Wood Tobo Bracelet (Male)', size: 'One Size', supplierCostNZD: 22.23 },
+  ],
+  supplierSnapshot: {
+    priceRangeNZD: [18.11, 22.23],
+    shipping: 'Alibaba page showed free shipping capped at NZ$35.85 for the first order; confirm current terms and destination coverage.',
+    storeRating: '4.8/5 from 202 store reviews',
+    responseTime: '≤1h',
+    onTimeDispatch: '≥98%',
+    listedMaterials: ['Crystal', 'K9 crystal'],
+  },
+  notes: 'Both variants exceed the NZ$4 supplier-cost ceiling, so this listing is not in the retail catalog. Confirm material claims, MOQ unit, final price and shipping with the supplier before reconsidering.',
+} as const;
