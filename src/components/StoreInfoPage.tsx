@@ -20,7 +20,7 @@ const PAGE_CONTENT: Record<Exclude<StoreInfoSlug, 'contact'>, { title: string; s
     sections: [
       { heading: 'Checkout information', body: 'Payments, delivery addresses and order details are handled by Shopify to process your purchase.' },
       { heading: 'Birth reading information', body: 'If you request a BaZi reading, the birthplace is sent to Open-Meteo to look up location/time-zone information. Birth details are sent to the configured AI reading service to produce the requested reading. This site does not store the reading request in a site database.' },
-      { heading: 'Analytics', body: 'Google Analytics is loaded only after you choose “Allow analytics”. You can keep using the site with essential storage only.' },
+      { heading: 'Analytics', body: 'Google Analytics loads automatically when you visit Fozhu to help us understand website traffic and usage. Google Analytics may use cookies and similar technologies. You can manage cookies through your browser settings.' },
       { heading: 'Questions', body: 'For privacy questions, email temple@fozhu.co.nz.' },
     ],
   },
