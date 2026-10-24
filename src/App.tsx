@@ -382,6 +382,7 @@ export default function App() {
           <CartPage
             cartItems={cartItems}
             currency={currency}
+          shippingCountry={shippingCountry}
             onUpdateQty={handleUpdateQty}
             onRemoveItem={handleRemoveItem}
             onContinueShopping={() => {

@@ -7,11 +7,12 @@ const PAGE_CONTENT: Record<Exclude<StoreInfoSlug, 'contact'>, { title: string; s
   shipping: {
     title: 'Shipping & Delivery',
     sections: [
-      { heading: 'Available destinations', body: `Shopify currently lists ${SHIPPING_COUNTRIES.length} destinations for delivery. Choose your destination in the country selector; Shopify checkout will confirm whether the items in your bag can ship there.` },
-      { heading: 'Delivery rates', body: 'The available methods, shipping charge, taxes and estimated delivery information are shown by Shopify checkout after you enter your delivery address. Rates can depend on destination, item and parcel. No group purchase is required; you can order one item.' },
+      { heading: 'Available destinations', body: `Shopify delivery is configured for ${SHIPPING_COUNTRIES.length} destinations. Choose your country in the flag selector; checkout confirms whether your basket can be delivered to your address.` },
+      { heading: 'Shopify delivery rates', body: 'New Zealand: NZ$10 standard delivery, or NZ$0 when the order subtotal reaches NZ$110. The other 27 configured countries: NZ$33 per order in the store’s base currency (NZD). Shopify may show a converted amount in your local market currency; the checkout amount is final.' },
+      { heading: 'Supplier delivery is separate', body: 'Shopify’s 28-country delivery setup does not mean every Alibaba supplier ships every item to all 28 countries. Supplier service, shipping fee, delivery time and minimum quantity vary by product and destination. Confirm the individual product’s shipping service before you publish or order it. One-item orders are supported where the supplier listing allows it; no group purchase is used.' },
       { heading: 'Fulfilment', body: 'Orders are arranged with the supplier after purchase. Fozhu does not currently provide automatic Alibaba order fulfilment. Different items may be sent as separate parcels, and tracking availability and timing depend on the supplier and route.' },
       { heading: 'Multiple items', body: 'The Shopify rate is calculated for the checkout order. When items come from different suppliers, parcels and supplier charges can differ; check the rate and delivery details shown at checkout. For questions before ordering, contact temple@fozhu.co.nz.' },
-      { heading: 'Supported destinations', body: SHIPPING_COUNTRIES.map((country) => `${country.flag} ${country.name}`).join(' · ') },
+      { heading: 'Shopify configured destinations and store rates', body: SHIPPING_COUNTRIES.map((country) => `${country.flag} ${country.name}: ${country.code === 'NZ' ? 'NZ$10 standard; free from NZ$110' : 'NZ$33 base rate'}`).join(' · ') },
     ],
   },
   privacy: {

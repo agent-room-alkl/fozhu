@@ -29,11 +29,17 @@ export const TopNotificationBar: React.FC<TopNotificationBarProps> = ({
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#E1BD7E]"></span>
           <span className="font-medium">SHIPPING TO 28 COUNTRIES</span>
           <span className="text-[#bd9686] hidden sm:inline">•</span>
-          <span className="hidden sm:inline text-[#E1BD7E]">One item ships individually</span>
+          <span className="hidden sm:inline text-[#E1BD7E]">Delivery options vary by item</span>
         </div>
 
         <div className="flex items-center gap-3 text-xs">
           <label htmlFor="shipping-country" className="text-[#bd9686]">Ship to</label>
+          <span
+            aria-hidden="true"
+            className="inline-flex h-7 min-w-8 items-center justify-center rounded-full bg-white/10 px-1.5 text-base leading-none ring-1 ring-white/15"
+          >
+            {selectedCountry.flag}
+          </span>
           <div className="relative">
             <select
               id="shipping-country"
