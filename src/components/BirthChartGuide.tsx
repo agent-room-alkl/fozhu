@@ -214,6 +214,7 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
                 </div>
                 <div>
                   <label htmlFor="birth-time" className="block text-sm font-semibold text-[#321a0f]">Time of birth <span className="font-normal text-[#82746f]">(optional)</span></label>
+                  <span className="mt-2 block text-[10px] font-semibold leading-[15px] text-[#675a51]">Two-hour period</span>
                   <select id="birth-time" value={birthTime} onChange={(e) => { setBirthTime(e.target.value); setError(''); }} className="mt-2 w-full rounded-lg border border-[#d8cec4] bg-[#FAF8F5] px-3 py-3 text-sm text-[#321a0f] focus:outline-none focus:ring-2 focus:ring-[#E1BD7E]">
                     {birthTime && Number(birthTime.slice(0, 2)) % 2 !== 1 && <option value={birthTime} disabled>Previous interval · reselect one traditional period</option>}
                     <option value="">Not sure / skip</option>{TIME_OPTIONS.map((hour) => {
@@ -231,7 +232,10 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
                     <option value="prefer_not_to_say">Prefer not to say</option><option value="female">Female</option><option value="male">Male</option>
                   </select>
                 </div>
-                <div className="flex flex-col justify-center rounded-lg bg-[#F7F3EF] px-3 py-2 text-xs text-[#82746f]" aria-live="polite"><span className="font-semibold text-[#504440]">Birth time zone · set automatically</span><span className="mt-1">{timeZoneStatus}</span></div>
+                <div>
+                  <p className="block text-sm font-semibold text-[#321a0f]">Birth time zone <span className="font-normal text-[#82746f]">· set automatically</span></p>
+                  <div className="mt-2 flex min-h-[50px] items-center rounded-lg bg-[#F7F3EF] px-3 py-2 text-xs text-[#82746f]" aria-live="polite">{timeZoneStatus}</div>
+                </div>
               </div>
               <div>
                 <label htmlFor="birthplace" className="block text-sm font-semibold text-[#321a0f]">Birthplace or region <span className="font-normal text-[#82746f]">(optional)</span></label>
