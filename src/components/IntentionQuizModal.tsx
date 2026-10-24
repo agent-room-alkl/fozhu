@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { MALA_PRODUCTS } from '../data/malas';
 import { MalaProduct } from '../types';
 import { singingBowl } from '../utils/audio';
 
@@ -7,12 +6,14 @@ interface IntentionQuizModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (product: MalaProduct, size: string, config?: string) => void;
+  products: MalaProduct[];
 }
 
 export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
   isOpen,
   onClose,
   onAddToCart,
+  products,
 }) => {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<{
@@ -40,7 +41,7 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
         : updated.sensoryTouch === 'aromatic_wood' || updated.chapterGoal === 'focus' || updated.styleFormat === '108_necklace'
           ? 'Wood Prayer Beads'
           : 'Bodhi Seed & Natural Seed Beads';
-      const match = MALA_PRODUCTS.find((product) => product.category === category) || MALA_PRODUCTS[0];
+      const match = products.find((product) => product.category === category) || products[0];
       setResultProduct(match);
       setStep(5); // Result step
     }
@@ -67,7 +68,7 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
         {step <= 4 && (
           <div className="mb-6 space-y-2">
             <div className="flex items-center justify-between text-xs font-sans text-[#82746f]">
-              <span className="font-semibold text-[#4d6453]">SOUL WOOD INTUITION</span>
+              <span className="font-semibold text-[#4d6453]">PERSONAL STYLE GUIDE</span>
               <span>Question {step} of 4</span>
             </div>
             <div className="w-full bg-[#EAE4DC] h-1.5 rounded-full overflow-hidden">
@@ -83,20 +84,20 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
         {step === 1 && (
           <div className="space-y-4">
             <span className="text-[11px] font-sans text-[#4d6453] uppercase tracking-widest font-semibold block">
-              Step 01 • Stress Pattern
+              Step 01 • Everyday style
             </span>
             <h3 className="text-xl font-serif text-[#321a0f]">
-              Where does modern noise or tension weigh on you the most?
+              Which kind of moment are you choosing a piece for?
             </h3>
             <p className="text-xs font-sans text-[#504440]">
-              Beads serve as visceral anchors to interrupt cognitive feedback loops.
+              Think about how you would like to wear or use it.
             </p>
             <div className="space-y-2.5 pt-2">
               {[
-                { id: 'racing_thoughts', label: 'Overthinking & racing mind before rest or meetings' },
-                { id: 'screen_fatigue', label: 'Sensory overload from endless digital screens and emails' },
-                { id: 'emotional_heaviness', label: 'Emotional weariness and feeling ungrounded in chaotic transit' },
-                { id: 'focus_drift', label: 'Difficulty staying centered in deep meditation or creative flow' },
+                { id: 'racing_thoughts', label: 'A small reminder in a busy day' },
+                { id: 'screen_fatigue', label: 'A piece for work or study' },
+                { id: 'emotional_heaviness', label: 'Something meaningful for travel' },
+                { id: 'focus_drift', label: 'A piece for quiet reflection' },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -120,21 +121,21 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
               Step 02 • Sensory Alignment
             </span>
             <h3 className="text-xl font-serif text-[#321a0f]">
-              Which tactile sensation instinctively soothes your central nervous system?
+              Which material and feel appeal to you?
             </h3>
             <div className="space-y-2.5 pt-2">
               {[
                 {
                   id: 'sacred_seeds',
-                  label: 'Textured natural seeds with deep ridges that stimulate palm acupressure points',
+                  label: 'Textured seed beads',
                 },
                 {
                   id: 'aromatic_wood',
-                  label: 'Naturally aged resinous timber emitting a mellow, warm honey-woody fragrance',
+                  label: 'Wood beads',
                 },
                 {
                   id: 'cool_stone',
-                  label: 'Pure mineral jade gemstone that feels soothingly cool against the skin',
+                  label: 'Smooth stone beads',
                 },
               ].map((opt) => (
                 <button
@@ -159,14 +160,14 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
               Step 03 • Life Intention
             </span>
             <h3 className="text-xl font-serif text-[#321a0f]">
-              What spiritual intention do you wish to invite into your upcoming days?
+              What symbolism or colour would you like to explore?
             </h3>
             <div className="space-y-2.5 pt-2">
               {[
-                { id: 'stress', label: 'Emotional equanimity, relief from anxiety & peaceful sleep' },
-                { id: 'focus', label: 'Unshakable meditation focus, breath awareness & spiritual grounding' },
-                { id: 'abundance', label: 'Harmonious relationships, career prosperity & clear heart meridian' },
-                { id: 'protection', label: 'Safe travels across borders & sanctuary against negative energy' },
+                { id: 'stress', label: 'Calm colours and a simple reminder' },
+                { id: 'focus', label: 'Wood and nature associations' },
+                { id: 'abundance', label: 'Warm colours and growth symbolism' },
+                { id: 'protection', label: 'Dark tones and grounding symbolism' },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -190,13 +191,13 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
               Step 04 • Everyday Ritual
             </span>
             <h3 className="text-xl font-serif text-[#321a0f]">
-              How do you envision communing with your consecrated mala?
+              How would you like to wear or use the piece?
             </h3>
             <div className="space-y-2.5 pt-2">
               {[
-                { id: 'wrist_daily', label: 'Worn constantly on my wrist as a silent companion at work & home' },
-                { id: '108_necklace', label: 'Full 108 rosary for mindful counting, mantra breathwork & altar' },
-                { id: 'pocket_touch', label: 'Carried in pocket or bag to roll between fingers in quiet pause' },
+                { id: 'wrist_daily', label: 'As an everyday bracelet' },
+                { id: '108_necklace', label: 'A full 108-bead mala' },
+                { id: 'pocket_touch', label: 'As a necklace or something to carry' },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -218,7 +219,7 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
           <div className="space-y-5 text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#cfe9d4] text-[#0a2013] text-xs font-sans font-bold">
               <span className="material-symbols-outlined text-sm">verified</span>
-              <span>Intuitive Resonance Match</span>
+              <span>Style suggestion</span>
             </div>
 
             <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#E1BD7E] shadow-md">
@@ -234,7 +235,7 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
 
             <div>
               <span className="text-xs font-sans text-[#82746f] block uppercase tracking-wider">
-                Your Soul Wood
+                Suggested piece
               </span>
               <h3 className="text-2xl font-serif text-[#321a0f] font-medium">
                 {resultProduct.name}
@@ -244,19 +245,9 @@ export const IntentionQuizModal: React.FC<IntentionQuizModalProps> = ({
               </p>
             </div>
 
-            {/* Personalized Mantra Box */}
             <div className="p-4 rounded-lg bg-[#F3EFEA] border border-[#EAE4DC] text-left space-y-1.5">
-              <span className="text-[10px] font-sans text-[#4d6453] uppercase tracking-widest font-bold block">
-                Your Personalized Sacred Mantra
-              </span>
-              <p className="font-serif text-base text-[#321a0f] italic">
-                {resultProduct.intention === 'stress'
-                  ? 'Om Mani Padme Hum — May your mind be freed from fear, finding tranquil stillness.'
-                  : resultProduct.intention === 'abundance'
-                  ? 'Gate Gate Paragate Parasamgate Bodhi Svaha — Heart clarity & auspicious harmony.'
-                  : 'Om Tare Tuttare Ture Soha — Unshakable grounding, swift wisdom & spiritual peace.'}
-              </p>
-              <p className="text-[11px] font-sans text-[#82746f] pt-1 border-t border-[#EAE4DC]">Supplier fulfilment · Shipping coverage and rates are confirmed at checkout</p>
+              <p className="text-xs leading-5 text-[#504440]">Suggested from your style preferences and available catalogue. Five Elements meanings are cultural associations for reflection, not predicted or guaranteed effects.</p>
+              <p className="text-[11px] font-sans text-[#82746f] pt-1 border-t border-[#EAE4DC]">One item can be ordered individually · Shopify confirms delivery at checkout.</p>
             </div>
 
             <div className="flex gap-3 pt-2">

@@ -11,6 +11,8 @@ export const TikTokViralSection: React.FC<TikTokViralSectionProps> = ({
   onQuickView,
   onPlaySoundGuide,
 }) => {
+  if (!TIKTOK_STORIES.length) return null;
+
   return (
     <section className="py-12 bg-[#FAF8F5] border-b border-[#EAE4DC]">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Currency, MalaProduct, SoulIntention } from '../types';
 import { ProductCard } from './ProductCard';
 
@@ -10,6 +10,9 @@ interface ProductGridProps {
   onAddToCart: (product: MalaProduct, size: string, config?: string) => void;
   onQuickView: (productId: string) => void;
   onResetFilters: () => void;
+  collectionFilter: '108-malas' | 'sacred-woods' | null;
+  onCollectionFilterChange: (filter: '108-malas' | 'sacred-woods' | null) => void;
+  onViewProduct: (product: MalaProduct) => void;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -20,12 +23,19 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onAddToCart,
   onQuickView,
   onResetFilters,
+  collectionFilter,
+  onCollectionFilterChange,
+  onViewProduct,
 }) => {
   const allCategories = 'All categories';
   const [categoryFilter, setCategoryFilter] = useState(allCategories);
+  useEffect(() => { setCategoryFilter(allCategories); }, [collectionFilter]);
   const categories = [allCategories, ...Array.from(new Set(products.map((product) => product.category)))];
 
   const filteredProducts = products.filter((p) => {
+    const productText = `${p.name} ${p.category} ${p.subtitle} ${p.description} ${(p.shopifyTags || []).join(' ')}`.toLowerCase();
+    if (collectionFilter === '108-malas' && !/\b108\b|108[- ]?bead/.test(productText)) return false;
+    if (collectionFilter === 'sacred-woods' && !/wood|agarwood|sandalwood|rosewood|wenge|chicken wing/.test(productText)) return false;
     // Intention filter
     if (activeIntention !== 'all' && p.intention !== activeIntention) {
       return false;
@@ -59,11 +69,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               FOZHU NZ · PRODUCT SELECTION
             </span>
             <h2 className="text-2xl sm:text-3xl font-serif text-[#321a0f]">
-              Prayer Beads & Bracelets
+              {collectionFilter === '108-malas' ? '108-Count Malas' : collectionFilter === 'sacred-woods' ? 'Wood Beads' : 'Prayer Beads & Bracelets'}
             </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs font-sans text-[#3A3835]">
+            {collectionFilter && <button onClick={() => onCollectionFilterChange(null)} className="px-3 py-1.5 rounded-full bg-[#321a0f] text-white font-semibold">{collectionFilter === '108-malas' ? '108 Malas ×' : 'Sacred Woods ×'}</button>}
             <span className="text-[#82746f]">Category:</span>
             {categories.map((category) => (
               <button key={category} onClick={() => setCategoryFilter(category)}
@@ -85,6 +96,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                 currency={currency}
                 onAddToCart={onAddToCart}
                 onQuickView={onQuickView}
+                onViewProduct={onViewProduct}
               />
             ))}
           </div>
@@ -99,6 +111,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             <button
               onClick={() => {
                 setCategoryFilter(allCategories);
+                onCollectionFilterChange(null);
                 onResetFilters();
               }}
               className="px-4 py-2 rounded bg-[#321a0f] text-[#FAF8F5] text-xs font-sans font-medium"

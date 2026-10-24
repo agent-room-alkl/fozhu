@@ -1,13 +1,12 @@
-import { MalaProduct } from '../types';
+import { Currency, MalaProduct } from '../types';
 import { SHOPIFY_STARTER_PRODUCTS } from '../data/shopifyStarterCatalog';
+import { ShippingCountryCode } from '../data/shippingCountries';
 
 // Storefront API requests must target the Shopify shop domain, not the custom
 // storefront domain (which may point to this Vercel app).
 const SHOP_DOMAIN = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || 'qxn57z-ep.myshopify.com').trim();
 const STOREFRONT_TOKEN = (import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN || '').trim();
 const API_VERSION = '2026-10';
-export const shopifyMarketCountry = (currency: 'NZD' | 'AUD' | 'USD') => currency === 'AUD' ? 'AU' : currency === 'USD' ? 'US' : 'NZ';
-
 export const isShopifyConfigured = Boolean(SHOP_DOMAIN);
 export const hasShopifyStorefrontToken = Boolean(STOREFRONT_TOKEN);
 
@@ -55,9 +54,9 @@ const PRODUCT_QUERY = `query StorefrontProducts($first: Int!, $country: CountryC
   }
 }`;
 
-export async function loadShopifyProducts(currency: 'NZD' | 'AUD' | 'USD'): Promise<MalaProduct[]> {
+export async function loadShopifyProducts(country: ShippingCountryCode): Promise<MalaProduct[]> {
   if (!STOREFRONT_TOKEN) return SHOPIFY_STARTER_PRODUCTS;
-  const data = await storefront<{ products: { nodes: ShopifyProduct[] } }>(PRODUCT_QUERY, { first: 100, country: shopifyMarketCountry(currency) });
+  const data = await storefront<{ products: { nodes: ShopifyProduct[] } }>(PRODUCT_QUERY, { first: 100, country });
   const liveProducts = data.products.nodes.map((remote, index) => {
     const available = remote.variants.nodes.filter((variant) => variant.availableForSale);
     const variants = available.map((variant, variantIndex) => ({
@@ -82,9 +81,12 @@ export async function loadShopifyProducts(currency: 'NZD' | 'AUD' | 'USD'): Prom
     const tags = remote.tags.map((tag) => tag.toLowerCase());
     const localCategory = categoryFromTags(tags, remote.title);
     const localIntention = intentionFromTags(tags);
+    const storefrontCurrency = remote.priceRange.minVariantPrice.currencyCode as Currency;
     return {
       id: `shopify-${remote.id.split('/').pop() || index}`,
       shopifyProductId: remote.id,
+      shopifyHandle: remote.handle,
+      storefrontCurrency,
       shopifyVariantId: variants.length === 1 ? variants[0].sizes[0].shopifyVariantId : undefined,
       shopifyTags: tags,
       sku,
@@ -125,11 +127,12 @@ export async function loadShopifyProducts(currency: 'NZD' | 'AUD' | 'USD'): Prom
   return liveProducts.length ? liveProducts : SHOPIFY_STARTER_PRODUCTS;
 }
 
-function categoryFromTags(tags: string[], title: string) {
+export function categoryFromTags(tags: string[], title: string) {
   const text = `${tags.join(' ')} ${title}`.toLowerCase();
   if (/necklace|pendant/.test(text)) return 'Beaded Necklaces';
   if (/bodhi|seed/.test(text)) return 'Bodhi Seed & Natural Seed Beads';
-  if (/mala|prayer|108/.test(text)) return 'Wood Prayer Beads';
+  if (/agarwood|sandalwood|rosewood|wenge|chicken wing wood|wood prayer|wood mala/.test(text)) return 'Wood Prayer Beads';
+  if (/mala|prayer|108/.test(text)) return 'Prayer Beads & Malas';
   return 'Natural Stone & Gemstone Bracelets';
 }
 
@@ -145,7 +148,7 @@ const CART_CREATE = `mutation CreateStorefrontCart($lines: [CartLineInput!]!, $c
   cartCreate(input: { lines: $lines, buyerIdentity: { countryCode: $country } }) { cart { id checkoutUrl } userErrors { field message } }
 }`;
 
-export async function createShopifyCheckout(lines: Array<{ merchandiseId: string; quantity: number; attributes?: Array<{ key: string; value: string }> }>, currency: 'NZD' | 'AUD' | 'USD') {
+export async function createShopifyCheckout(lines: Array<{ merchandiseId: string; quantity: number; attributes?: Array<{ key: string; value: string }> }>, shippingCountry: ShippingCountryCode) {
   if (!STOREFRONT_TOKEN) {
     const checkoutLines = lines.map(({ merchandiseId, quantity }) => {
       const variantId = merchandiseId.split('/').pop();
@@ -155,7 +158,7 @@ export async function createShopifyCheckout(lines: Array<{ merchandiseId: string
     if (!checkoutLines.length) throw new Error('Your bag is empty. Add an item before checkout.');
     return `https://${SHOP_DOMAIN}/cart/${checkoutLines.join(',')}?checkout`;
   }
-  const data = await storefront<{ cartCreate: { cart: { id: string; checkoutUrl: string } | null; userErrors: Array<{ message: string }> } }>(CART_CREATE, { lines, country: shopifyMarketCountry(currency) });
+  const data = await storefront<{ cartCreate: { cart: { id: string; checkoutUrl: string } | null; userErrors: Array<{ message: string }> } }>(CART_CREATE, { lines, country: shippingCountry });
   const result = data.cartCreate;
   if (result.userErrors.length || !result.cart?.checkoutUrl) throw new Error(result.userErrors.map((error) => error.message).join(' ') || 'Shopify could not create checkout.');
   return result.cart.checkoutUrl;

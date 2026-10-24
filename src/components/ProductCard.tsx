@@ -7,6 +7,7 @@ interface ProductCardProps {
   currency: Currency;
   onAddToCart: (product: MalaProduct, size: string, config?: string) => void;
   onQuickView: (productId: string) => void;
+  onViewProduct: (product: MalaProduct) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -14,6 +15,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   currency,
   onAddToCart,
   onQuickView,
+  onViewProduct,
 }) => {
 
   return (
@@ -21,7 +23,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div>
         {/* Frameless Image Container with Patina Badge */}
         <div
-          onClick={() => onQuickView(product.id)}
+          onClick={() => onViewProduct(product)}
+          onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onViewProduct(product); } }}
+          role="link"
+          tabIndex={0}
+          aria-label={`View ${product.name}`}
           className="relative bg-[#ece7e4] aspect-square overflow-hidden cursor-pointer"
         >
           <img
@@ -48,7 +54,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div className="flex justify-between items-start">
             <div>
               <h3
-                onClick={() => onQuickView(product.id)}
+                onClick={() => onViewProduct(product)}
                 className="font-serif text-lg font-medium text-[#321a0f] group-hover:text-[#E1BD7E] transition-colors cursor-pointer"
               >
                 {product.name}
@@ -73,8 +79,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <span className="font-serif text-lg text-[#321a0f] font-bold">
             {formatMoney(currency === 'NZD' ? product.priceNZD : currency === 'AUD' ? product.priceAUD : product.priceUSD, currency)}
           </span>
-          <span className="text-[10px] font-sans text-[#82746f] block">
-            <span>Retail price</span>
+              <span className="text-[10px] font-sans text-[#82746f] block">
+            <span>Item price</span>
           </span>
         </div>
         <button

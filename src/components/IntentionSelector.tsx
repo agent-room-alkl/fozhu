@@ -17,7 +17,7 @@ export const IntentionSelector: React.FC<IntentionSelectorProps> = ({
   }[] = [
     {
       id: 'stress',
-      label: 'Stress & Overthinking',
+      label: 'Calm & Reflection',
       icon: 'self_improvement',
     },
     {
@@ -27,12 +27,12 @@ export const IntentionSelector: React.FC<IntentionSelectorProps> = ({
     },
     {
       id: 'abundance',
-      label: 'Abundance & Career',
+      label: 'Growth & Possibility',
       icon: 'monetization_on',
     },
     {
       id: 'protection',
-      label: 'Protection & Safe Travels',
+      label: 'Grounding & Travel',
       icon: 'shield',
     },
   ];
@@ -41,13 +41,13 @@ export const IntentionSelector: React.FC<IntentionSelectorProps> = ({
     <section className="py-12 bg-[#F3EFEA] border-b border-[#EAE4DC]">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 text-center">
         <span className="text-xs font-sans text-[#4d6453] uppercase tracking-widest block mb-2 font-semibold">
-          Intentional Energy Alignment
+          Five Elements · Personal Reflection
         </span>
         <h2 className="text-2xl sm:text-3xl font-serif text-[#321a0f] mb-3">
-          What does your soul seek today?
+          What meaning would you like to explore today?
         </h2>
         <p className="text-sm font-sans text-[#504440] max-w-lg mx-auto mb-8 leading-relaxed">
-          In ancient Buddhist practice, beads serve as tactile reminders for conscious intention. Select your focus:
+          Browse symbolic associations from Chinese Five Elements traditions. Choose a theme for personal reflection; these are not promises of an outcome.
         </p>
 
         {/* Intention Pills */}

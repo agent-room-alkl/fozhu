@@ -60,6 +60,7 @@ function attachShopifyVariants(product: MalaProduct): MalaProduct {
   return {
     ...product,
     shopifyProductId: `gid://shopify/Product/${data.productId}`,
+    shopifyHandle: data.handle,
     shopifyTags: data.tags,
     productUrl: `https://${SHOP_DOMAIN}/products/${data.handle}`,
     image: `${IMAGE_BASE}${data.images[0]}`,

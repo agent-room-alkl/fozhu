@@ -1,5 +1,6 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import { BirthDetails, Currency } from '../types';
+import { MalaProduct } from '../types';
 import { inferBirthTimezone } from '../utils/birthTimezone';
 import { ElementMark } from './ElementMark';
 
@@ -8,6 +9,7 @@ interface HeroSectionProps {
   onExploreCollections: () => void;
   onSubmitBirthDetails: (details: BirthDetails) => void;
   onQuickViewHeroItem: () => void;
+  featuredProduct: MalaProduct | undefined;
 }
 
 interface IpLocation {
@@ -30,6 +32,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onExploreCollections,
   onSubmitBirthDetails,
   onQuickViewHeroItem,
+  featuredProduct,
 }) => {
   const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Pacific/Auckland';
   const [birthDate, setBirthDate] = useState('');
@@ -96,21 +99,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     setIsSubmitting(true);
     onSubmitBirthDetails({ birthDate, birthTime, birthplace, timeZone, gender: gender || 'prefer_not_to_say' });
   };
-  const getHeroPrice = () => {
-    switch (currency) {
-      case 'USD':
-        return '$159 USD';
-      case 'AUD':
-        return '$239 AUD';
-      case 'NZD':
-      default:
-        return '$260 NZD';
-    }
-  };
-
-  const getSecondaryPrice = () => {
-    return currency === 'USD' ? '$260 NZD' : '$159 USD';
-  };
+  const featuredPrice = featuredProduct ? currency === 'USD' ? featuredProduct.priceUSD : currency === 'AUD' ? featuredProduct.priceAUD : featuredProduct.priceNZD : null;
 
   return (
     <section className="relative isolate overflow-hidden border-b border-[#EAE4DC] bg-[#211713]">
@@ -127,21 +116,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       <div className="relative z-10 mx-auto flex min-h-[700px] max-w-7xl flex-col px-4 py-7 sm:px-6 lg:min-h-[640px] lg:px-8 lg:py-8">
         <div className="max-w-lg space-y-4">
-          {/* TikTok Viral Proof Chip */}
           <div className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-white/25 bg-[#FAF8F5]/95 px-3 py-1.5 shadow-lg">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E1BD7E] opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#321a0f]"></span>
-            </span>
-            <span className="text-[10px] font-sans text-[#3A3835] sm:text-[11px]">
-              Viral on TikTok <span className="text-[#d4c3bd]">•</span> 14,800+ souls in NZ, AU &amp; US finding calm
-            </span>
-            <span aria-label="5 out of 5" className="shrink-0 text-xs tracking-tighter text-[#E1BD7E]">★★★★★</span>
+            <span className="material-symbols-outlined text-sm text-[#4d6453]">spa</span>
+            <span className="text-[10px] font-sans text-[#3A3835] sm:text-[11px]">Five Elements · Chinese cultural tradition</span>
           </div>
 
           <h1 className="max-w-xl font-serif text-4xl leading-tight tracking-tight text-[#FAF8F5] sm:text-5xl sm:leading-[1.08] lg:text-6xl">
-            What might your<br />
-            <span className="font-normal italic text-[#E1BD7E]">next chapter hold?</span>
+            Find a piece that<br />
+            <span className="font-normal italic text-[#E1BD7E]">reflects your style.</span>
           </h1>
 
           <form onSubmit={handleBirthDetailsSubmit} className="max-w-md rounded-2xl border border-white/60 bg-[#FAF8F5]/95 p-3.5 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-4">
@@ -197,21 +179,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button onClick={onExploreCollections} className="inline-flex items-center gap-1.5 font-semibold text-[#E1BD7E] transition-colors hover:text-white">
               Browse all beads <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
-            <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-[#E1BD7E]">verified</span>Temple blessed</span>
-            <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-[#E1BD7E]">eco</span>Wild-harvest materials</span>
+            <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-[#E1BD7E]">menu_book</span>Five Elements cultural reference</span>
+            <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-[#E1BD7E]">shopping_bag</span>Order one item at a time</span>
           </div>
         </div>
 
-        <button onClick={onQuickViewHeroItem} className="group mt-6 inline-flex w-fit items-center gap-3 rounded-full border border-white/30 bg-[#211713]/65 px-3 py-2 text-left text-white backdrop-blur-md transition-colors hover:bg-[#211713]/85 sm:mt-8 lg:absolute lg:bottom-8 lg:right-8 lg:mt-0">
+        {featuredProduct && <button onClick={onQuickViewHeroItem} className="group mt-6 inline-flex w-fit items-center gap-3 rounded-full border border-white/30 bg-[#211713]/65 px-3 py-2 text-left text-white backdrop-blur-md transition-colors hover:bg-[#211713]/85 sm:mt-8 lg:absolute lg:bottom-8 lg:right-8 lg:mt-0">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E1BD7E] p-1.5 text-[#321a0f]">
             <ElementMark className="block h-full w-full" />
           </span>
           <span>
-            <span className="block text-[11px] font-semibold">Aged Hainan Wild Agarwood 108 Mala</span>
-            <span className="block text-[10px] text-white/70">Naturally resinous · Temple sanctified</span>
+            <span className="block text-[11px] font-semibold">{featuredProduct.name}</span>
+            <span className="block text-[10px] text-white/70">{featuredProduct.category} · Details on product page</span>
           </span>
-          <span className="ml-2 text-xs font-bold text-[#E1BD7E]">{getHeroPrice()}</span>
-        </button>
+          {featuredPrice !== null && <span className="ml-2 text-xs font-bold text-[#E1BD7E]">{new Intl.NumberFormat('en-NZ', { style: 'currency', currency }).format(featuredPrice)}</span>}
+        </button>}
       </div>
     </section>
   );

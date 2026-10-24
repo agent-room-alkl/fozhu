@@ -23,16 +23,20 @@ import { QuickViewModal } from './components/QuickViewModal';
 import { SingingBowlAudioModal } from './components/SingingBowlAudioModal';
 import { Toast } from './components/Toast';
 import { BirthChartGuide } from './components/BirthChartGuide';
+import { ProductDetailPage } from './components/ProductDetailPage';
+import { StoreInfoPage, StoreInfoSlug } from './components/StoreInfoPage';
 import { createShopifyCheckout, hasShopifyStorefrontToken, isShopifyConfigured, loadShopifyProducts } from './services/shopifyStorefront';
 import { getShopifyVariantId } from './utils/productVariants';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<'home' | 'cart' | 'birth-chart'>('home');
+  const [pathname, setPathname] = useState(() => window.location.pathname);
   const [currency, setCurrency] = useState<Currency>('NZD');
   const [shippingCountry, setShippingCountry] = useState<ShippingCountryCode>(DEFAULT_SHIPPING_COUNTRY);
   const [detectedCountryCode, setDetectedCountryCode] = useState<string | null>(null);
   const [activeIntention, setActiveIntention] = useState<SoulIntention>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [collectionFilter, setCollectionFilter] = useState<'108-malas' | 'sacred-woods' | null>(null);
   const [birthDetails, setBirthDetails] = useState<BirthDetails | null>(null);
   const [products, setProducts] = useState<MalaProduct[]>(SHOPIFY_STARTER_PRODUCTS);
   const [shopifyCatalogState, setShopifyCatalogState] = useState<'loading' | 'connected' | 'empty' | 'preview' | 'error'>(hasShopifyStorefrontToken ? 'loading' : 'preview');
@@ -62,6 +66,19 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    const onPopState = () => { setPathname(window.location.pathname); setCurrentScreen('home'); window.scrollTo(0, 0); };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  const navigatePath = (path: string) => {
+    if (window.location.pathname !== path) window.history.pushState({}, '', path);
+    setPathname(path);
+    setCurrentScreen('home');
+    window.scrollTo(0, 0);
+  };
+
   const handleShippingCountryChange = (code: ShippingCountryCode) => {
     const country = getShippingCountry(code);
     if (!country) return;
@@ -76,9 +93,10 @@ export default function App() {
     if (!hasShopifyStorefrontToken) return;
     let active = true;
     setShopifyCatalogState('loading');
-    loadShopifyProducts(currency).then((items) => {
+    loadShopifyProducts(shippingCountry).then((items) => {
       if (!active) return;
       setProducts(items);
+      if (items[0]?.storefrontCurrency) setCurrency(items[0].storefrontCurrency);
       setCartItems((current) => current.map((item) => {
         const liveProduct = items.find((product) => product.shopifyProductId === item.product.shopifyProductId || product.sku === item.product.sku);
         return liveProduct ? { ...item, product: liveProduct } : item;
@@ -88,7 +106,7 @@ export default function App() {
       if (active) setShopifyCatalogState('error');
     });
     return () => { active = false; };
-  }, [currency]);
+  }, [shippingCountry]);
 
   // Keep the same bag across refreshes; Shopify product data is reconciled when it loads.
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
@@ -138,8 +156,8 @@ export default function App() {
         selectedConfig: config,
         wristSize: config === 'Full 108 Beads' ? 'Standard 108 Mala' : '16.5cm (Natural Fit)',
         quantity: 1,
-        chantingNameDedication: 'Peace, Health & Clear Mind',
-        sealNumber: product.consecrationSeal,
+        chantingNameDedication: '',
+        sealNumber: '',
         shopifyVariantId,
         baziElement,
       };
@@ -182,7 +200,7 @@ export default function App() {
     }
     setCheckoutBusy(true);
     try {
-      const checkoutUrl = await createShopifyCheckout(lines as Array<{ merchandiseId: string; quantity: number; attributes?: Array<{ key: string; value: string }> }>, currency);
+      const checkoutUrl = await createShopifyCheckout(lines as Array<{ merchandiseId: string; quantity: number; attributes?: Array<{ key: string; value: string }> }>, shippingCountry);
       window.location.assign(checkoutUrl);
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : 'Shopify could not open checkout. Please try again.');
@@ -192,6 +210,54 @@ export default function App() {
   };
 
   const quickViewProduct = products.find((p) => p.id === quickViewProductId) || null;
+  const productHandleFromPath = pathname.match(/^\/products\/([^/]+)/)?.[1];
+  const activeProduct = productHandleFromPath ? products.find((product) => product.shopifyHandle === productHandleFromPath || product.id === productHandleFromPath) : undefined;
+  const infoSlug = pathname.match(/^\/pages\/([^/]+)/)?.[1] as StoreInfoSlug | undefined;
+  const handleViewProduct = (product: MalaProduct) => {
+    const handle = product.shopifyHandle || product.id;
+    navigatePath(`/products/${handle}`);
+  };
+  const selectCollection = (filter: '108-malas' | 'sacred-woods' | null) => {
+    setCollectionFilter(filter);
+    setActiveIntention('all');
+  };
+  const infoPages: StoreInfoSlug[] = ['shipping', 'privacy', 'returns', 'contact', 'culture'];
+
+  useEffect(() => {
+    const title = activeProduct
+      ? `${activeProduct.name} | Fozhu`
+      : infoSlug && infoPages.includes(infoSlug)
+        ? `${infoSlug === 'contact' ? 'Contact' : infoSlug === 'culture' ? 'Five Elements & BaZi' : infoSlug[0].toUpperCase() + infoSlug.slice(1)} | Fozhu`
+        : 'Five Elements Beads & Prayer Malas | Fozhu NZ';
+    document.title = title;
+    let description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (!description) { description = document.createElement('meta'); description.name = 'description'; document.head.appendChild(description); }
+    description.content = activeProduct
+      ? `${activeProduct.description.slice(0, 250)} Five Elements meanings are a cultural reference, not a promised outcome.`
+      : 'Explore bead designs and BaZi-inspired readings rooted in Chinese Five Elements traditions. Cultural and styling reference only.';
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+    canonical.href = `https://fozhu.co.nz${pathname === '/' ? '/' : pathname}`;
+    const existingProductSchema = document.getElementById('fozhu-product-schema');
+    existingProductSchema?.remove();
+    if (activeProduct) {
+      const schema = document.createElement('script');
+      schema.id = 'fozhu-product-schema';
+      schema.type = 'application/ld+json';
+      schema.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: activeProduct.name,
+        description: activeProduct.description,
+        image: activeProduct.imageGallery.length ? activeProduct.imageGallery : [activeProduct.image],
+        sku: activeProduct.sku,
+        category: activeProduct.category,
+        brand: { '@type': 'Brand', name: 'Fozhu' },
+        url: `https://fozhu.co.nz/products/${activeProduct.shopifyHandle || activeProduct.id}`,
+      });
+      document.head.appendChild(schema);
+    }
+  }, [pathname, activeProduct?.id, infoSlug]);
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#3A3835] font-sans flex flex-col selection:bg-[#E1BD7E] selection:text-[#2C1B14]">
@@ -208,26 +274,40 @@ export default function App() {
       <Header
         currentScreen={currentScreen}
         onNavigate={(scr) => {
+          if (pathname !== '/') {
+            window.history.pushState({}, '', '/');
+            setPathname('/');
+          }
           setCurrentScreen(scr);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        onSelectCollection={selectCollection}
         cartCount={cartItems.reduce((acc, it) => acc + it.quantity, 0)}
         onOpenQuiz={() => setIsQuizOpen(true)}
         onOpenSoundBowl={() => setIsAudioGuideOpen(true)}
         onSearch={(q) => {
           setSearchQuery(q);
-          if (currentScreen !== 'home') setCurrentScreen('home');
-          const el = document.getElementById('collections');
-          el?.scrollIntoView({ behavior: 'smooth' });
+          if (pathname !== '/') {
+            window.history.pushState({}, '', '/');
+            setPathname('/');
+          }
+          setCurrentScreen('home');
+          window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0);
         }}
       />
 
       {/* 3. Screen Switching: Home View vs Cart / Spiritual Order View */}
-      {currentScreen === 'home' ? (
+      {productHandleFromPath ? (
+        activeProduct ? <ProductDetailPage product={activeProduct} currency={currency} onAddToCart={(product, size, config) => handleAddToCart(product, size, config)} onBack={() => navigatePath('/')} />
+          : <main className="min-h-[60vh] mx-auto max-w-3xl p-8 text-center"><h1 className="font-serif text-3xl text-[#321a0f]">{shopifyCatalogState === 'loading' ? 'Loading product…' : 'Product not found'}</h1><button onClick={() => navigatePath('/')} className="mt-5 underline">Return to the collection</button></main>
+      ) : infoSlug && infoPages.includes(infoSlug) ? (
+        <StoreInfoPage slug={infoSlug} onBack={() => navigatePath('/')} />
+      ) : currentScreen === 'home' ? (
         <main className="flex-1">
           {/* Hero Section with Cinematic Visual */}
           <HeroSection
             currency={currency}
+            featuredProduct={products[0]}
             onExploreCollections={() => {
               const el = document.getElementById('collections');
               el?.scrollIntoView({ behavior: 'smooth' });
@@ -237,7 +317,7 @@ export default function App() {
               setCurrentScreen('birth-chart');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            onQuickViewHeroItem={() => { setPendingBaziElement(undefined); setQuickViewProductId(products[0]?.id); }}
+          onQuickViewHeroItem={() => { if (products[0]) handleViewProduct(products[0]); }}
           />
 
           {/* Interactive 'Choose by Life Intention' Selector */}
@@ -264,6 +344,9 @@ export default function App() {
             currency={currency}
             activeIntention={activeIntention}
             searchQuery={searchQuery}
+            collectionFilter={collectionFilter}
+            onCollectionFilterChange={selectCollection}
+            onViewProduct={handleViewProduct}
             onAddToCart={handleAddToCart}
             onQuickView={(id) => { setPendingBaziElement(undefined); setQuickViewProductId(id); }}
             onResetFilters={() => {
@@ -317,6 +400,7 @@ export default function App() {
           initialDetails={birthDetails}
           onAddToCart={handleAddToCart}
           onBackToStore={() => setCurrentScreen('home')}
+          onViewProduct={handleViewProduct}
           onQuickView={(id, element) => { setPendingBaziElement(element); setQuickViewProductId(id); }}
         />
       )}
@@ -329,6 +413,7 @@ export default function App() {
         isOpen={isQuizOpen}
         onClose={() => setIsQuizOpen(false)}
         onAddToCart={handleAddToCart}
+        products={products}
       />
 
       <QuickViewModal
@@ -336,6 +421,7 @@ export default function App() {
         currency={currency}
         preferredElement={pendingBaziElement}
         onClose={() => { setQuickViewProductId(null); setPendingBaziElement(undefined); }}
+        onViewProduct={handleViewProduct}
         onAddToCart={(product, size, config) => { handleAddToCart(product, size, config, pendingBaziElement); setPendingBaziElement(undefined); }}
       />
 

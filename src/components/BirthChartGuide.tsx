@@ -43,10 +43,11 @@ interface BirthChartGuideProps {
   initialDetails?: BirthDetails | null;
   onAddToCart: (product: MalaProduct, size: string, config?: string, baziElement?: string) => void;
   onQuickView: (productId: string, baziElement?: string) => void;
+  onViewProduct: (product: MalaProduct) => void;
   onBackToStore: () => void;
 }
 
-export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, products, initialDetails, onAddToCart, onQuickView, onBackToStore }) => {
+export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, products, initialDetails, onAddToCart, onQuickView, onViewProduct, onBackToStore }) => {
   const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Pacific/Auckland';
   const [birthDate, setBirthDate] = useState(initialDetails?.birthDate || '');
   const [birthTime, setBirthTime] = useState(initialDetails?.birthTime || '');
@@ -282,7 +283,7 @@ export const BirthChartGuide: React.FC<BirthChartGuideProps> = ({ currency, prod
             </div>
             {recommendedElement && <section>
               <div className="max-w-3xl"><p className="text-xs uppercase tracking-[0.18em] font-semibold text-[#4d6453]">Personalised bead direction</p><h3 className="mt-2 font-serif text-2xl text-[#321a0f]">A {recommendedElement.toLowerCase()}-inspired bracelet or mala</h3><p className="mt-2 text-sm text-[#625650] leading-6">{reading.beadRecommendation.rationale || `A symbolic style direction based on the ${recommendedElement} theme.`} {reading.beadRecommendation.materials.join(' · ') || reading.materialSuggestions.join(' · ') || ELEMENT_MATERIALS[recommendedElement]}. {reading.beadRecommendation.colours.length > 0 && <><strong> Colours:</strong> {reading.beadRecommendation.colours.join(', ')}.</>} Choose pieces for their colour, material and personal meaning.</p></div>
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">{recommendedProducts.map((product) => <ProductCard key={product.id} product={product} currency={currency} onAddToCart={(item, size, config) => onAddToCart(item, size, config, recommendedElement || undefined)} onQuickView={(id) => onQuickView(id, recommendedElement || undefined)} />)}</div>
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">{recommendedProducts.map((product) => <ProductCard key={product.id} product={product} currency={currency} onAddToCart={(item, size, config) => onAddToCart(item, size, config, recommendedElement || undefined)} onQuickView={(id) => onQuickView(id, recommendedElement || undefined)} onViewProduct={onViewProduct} />)}</div>
             </section>}
             <div className="rounded-xl bg-[#2C1B14] p-5 sm:p-7 text-[#FAF8F5] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"><div><p className="font-serif text-lg">A note on this reading</p><p className="mt-1 max-w-3xl text-xs leading-5 text-[#EAE4DC]">This is a traditional cultural interpretation for reflection, not a certain prediction or professional advice. Bead suggestions are symbolic styling ideas, not a promise to change your future.</p></div><button onClick={onBackToStore} className="shrink-0 px-5 py-2.5 rounded-lg bg-[#E1BD7E] text-[#2C1B14] text-sm font-semibold hover:bg-[#f0d9a9]">Browse all pieces</button></div>
           </div>

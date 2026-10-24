@@ -6,7 +6,7 @@ export const TrustGuaranteesSection: React.FC = () => (
       {[
         { icon: 'public', title: 'Supplier fulfilment', copy: 'Orders are arranged with each product’s supplier after purchase.' },
         { icon: 'local_shipping', title: 'Destination coverage', copy: 'Available countries and delivery rates are confirmed at checkout.' },
-        { icon: 'redeem', title: 'Clear shipping rates', copy: 'New Zealand: NZ$10, free over NZ$110. Selected international destinations: NZ$33 equivalent.' },
+        { icon: 'redeem', title: 'No group-buy requirement', copy: 'Buy one item at a time. Shopify calculates the available delivery rate at checkout.' },
         { icon: 'support_agent', title: 'Order support', copy: 'Tracking availability depends on the supplier and delivery route.' },
       ].map((item) => (
         <div key={item.title} className="p-5 rounded bg-[#F3EFEA] border border-[#EAE4DC] flex items-start gap-3">

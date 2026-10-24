@@ -1,4 +1,4 @@
-export type Currency = 'NZD' | 'AUD' | 'USD';
+export type Currency = 'NZD' | 'AUD' | 'USD' | 'AED' | 'EUR' | 'CAD' | 'CHF' | 'CZK' | 'DKK' | 'HKD' | 'ILS' | 'JPY' | 'KRW' | 'MYR' | 'GBP' | 'NOK' | 'PLN' | 'SGD' | 'SEK';
 
 export interface BirthDetails {
   birthDate: string;
@@ -56,6 +56,8 @@ export interface MalaProduct {
   sizeLabel?: string;
   /** Shopify Storefront API product/variant identifiers; absent in the local preview catalog. */
   shopifyProductId?: string;
+  shopifyHandle?: string;
+  storefrontCurrency?: Currency;
   shopifyVariantId?: string;
   shopifyTags?: string[];
 }
@@ -83,15 +85,3 @@ export interface CartItem {
   baziElement?: string;
 }
 
-export interface RegionalPoolCircle {
-  id: string;
-  cityCode: string;
-  name: string;
-  initiator: string;
-  location: string;
-  spotsFilled: number;
-  totalSpots: number;
-  transitHub: string;
-  status: 'active' | 'open' | 'almost_full';
-  flightCutoffHours: number;
-}

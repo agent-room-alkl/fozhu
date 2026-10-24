@@ -1,4 +1,4 @@
-import { MalaProduct, RegionalPoolCircle } from '../types';
+import { MalaProduct } from '../types';
 import { PBB1086_WOOD_VARIANTS } from './pbb1086Variants';
 import { DIBISHI_STRETCH_108_VARIANTS } from './dibishiVariants';
 import { JD_GEMS_FIVE_ELEMENTS_VARIANTS } from './jdGemsVariants';
@@ -358,11 +358,6 @@ export const MALA_PRODUCTS: MalaProduct[] =  [
     variantLabel: 'colour combination',
     sizeLabel: 'Bead diameter'
   }
-];
-
-export const REGIONAL_CIRCLES: RegionalPoolCircle[] = [
-  { id: 'circle-auckland', cityCode: 'AK', name: 'Auckland Central & North Shore', initiator: 'Fozhu NZ', location: 'Auckland, New Zealand', spotsFilled: 0, totalSpots: 2, transitHub: 'NZ Post', status: 'open', flightCutoffHours: 0 },
-  { id: 'circle-sydney', cityCode: 'SY', name: 'Sydney Eastern Suburbs Circle', initiator: 'Fozhu NZ', location: 'Sydney, Australia', spotsFilled: 0, totalSpots: 2, transitHub: 'Australia Post', status: 'open', flightCutoffHours: 0 }
 ];
 
 export const PRACTITIONER_REVIEWS = [];

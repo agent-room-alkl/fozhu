@@ -8,9 +8,10 @@ interface QuickViewModalProps {
   preferredElement?: string;
   onClose: () => void;
   onAddToCart: (product: MalaProduct, size: string, config?: string) => void;
+  onViewProduct: (product: MalaProduct) => void;
 }
 
-export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, currency, preferredElement, onClose, onAddToCart }) => {
+export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, currency, preferredElement, onClose, onAddToCart, onViewProduct }) => {
   const [activeImage, setActiveImage] = useState('');
   const [selectedWood, setSelectedWood] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -102,6 +103,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, currenc
               <span className="material-symbols-outlined text-[#E1BD7E]">add_shopping_cart</span>
               <span>Add to Bag</span>
             </button>
+            <button onClick={() => { onClose(); onViewProduct(product); }} className="w-full py-2 text-xs font-semibold text-[#4d6453] underline underline-offset-4">View full product page</button>
           </div>
         </div>
       </div>

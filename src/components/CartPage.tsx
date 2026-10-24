@@ -84,12 +84,12 @@ export const CartPage: React.FC<CartPageProps> = ({ cartItems, currency, onUpdat
             <aside className="bg-white rounded-xl border border-[#EAE4DC] p-6 space-y-4 lg:sticky lg:top-24">
               <h2 className="font-serif text-xl text-[#321a0f]">Order summary</h2>
               <div className="flex justify-between text-sm"><span>Items ({itemCount})</span><span>{formatMoney(subtotal, currency)}</span></div>
-              <div className="flex justify-between items-start text-sm gap-4"><span>Estimated shipping</span><span className={shipping === 0 ? 'text-[#4d6453] font-semibold' : ''}>{shipping === 0 ? 'FREE' : formatMoney(shipping, currency)}</span></div>
-              <p className="text-[11px] text-[#82746f] -mt-2">Current Shopify rates: NZ orders are NZ$10, free at NZ$110+; selected international destinations are NZ$33 equivalent. Shopify confirms the final destination rate and taxes at checkout.</p>
-              <div className="border-t border-[#EAE4DC] pt-4 flex justify-between font-semibold text-[#321a0f]"><span>Total</span><span>{formatMoney(subtotal + shipping, currency)}</span></div>
+              <div className="flex justify-between items-start text-sm gap-4"><span>Shipping</span><span className="text-right text-xs text-[#82746f]">Calculated by Shopify checkout</span></div>
+              <p className="text-[11px] text-[#82746f] -mt-2">Shopify shows the available delivery methods and exact rate after you enter your address.</p>
+              <div className="border-t border-[#EAE4DC] pt-4 flex justify-between font-semibold text-[#321a0f]"><span>Items subtotal</span><span>{formatMoney(subtotal, currency)}</span></div>
               {checkoutError && <p role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-800">{checkoutError}</p>}
               <button onClick={onCheckout} disabled={checkoutBusy} className="w-full py-3.5 rounded bg-[#321a0f] hover:bg-[#2C1B14] disabled:opacity-60 text-white text-xs font-bold uppercase tracking-wider">{checkoutBusy ? 'Preparing secure checkout…' : 'Continue to Shopify checkout'}</button>
-              <p className="text-[11px] text-center text-[#82746f]">Supplier shipping fees and delivery coverage have not yet been matched to these store rates. Review the final rate before paying.</p>
+              <p className="text-[11px] text-center text-[#82746f]">Each item is ordered individually from its supplier after purchase. Review Shopify’s delivery rate before paying.</p>
             </aside>
           </div>
         )}

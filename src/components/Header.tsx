@@ -7,6 +7,7 @@ interface HeaderProps {
   onOpenQuiz: () => void;
   onOpenSoundBowl: () => void;
   onSearch: (query: string) => void;
+  onSelectCollection: (collection: '108-malas' | 'sacred-woods' | null) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenQuiz,
   onOpenSoundBowl,
   onSearch,
+  onSelectCollection,
 }) => {
   const [searchVal, setSearchVal] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,8 +40,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => {
               onNavigate('home');
-              const el = document.getElementById('collections');
-              el?.scrollIntoView({ behavior: 'smooth' });
+              onSelectCollection(null);
+              window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0);
             }}
             className={`pb-1 transition-colors duration-200 cursor-pointer ${
               currentScreen === 'home'
@@ -52,7 +54,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => {
               onNavigate('home');
-              document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' });
+              onSelectCollection('108-malas');
+              window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0);
             }}
             className="hidden xl:inline-flex text-[#3A3835] pb-1 hover:text-[#E1BD7E] transition-colors duration-200 cursor-pointer"
           >
@@ -61,7 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => {
               onNavigate('home');
-              document.getElementById('sacred-consecration-story')?.scrollIntoView({ behavior: 'smooth' });
+              onSelectCollection('sacred-woods');
+              window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0);
             }}
             className="hidden 2xl:inline-flex text-[#3A3835] pb-1 hover:text-[#E1BD7E] transition-colors duration-200 cursor-pointer"
           >
@@ -71,17 +75,17 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenQuiz}
             className="hidden 2xl:flex text-[#3A3835] pb-1 hover:text-[#E1BD7E] transition-colors duration-200 items-center gap-1.5 cursor-pointer"
           >
-            Mindfulness Quiz
+            Style Quiz
             <span className="px-1 py-0.5 text-[8px] bg-[#cfe9d4] text-[#0a2013] rounded tracking-normal font-bold">60s</span>
           </button>
           <button
             onClick={() => {
               onNavigate('home');
-              document.getElementById('blessing-ritual')?.scrollIntoView({ behavior: 'smooth' });
+              window.setTimeout(() => document.getElementById('blessing-ritual')?.scrollIntoView({ behavior: 'smooth' }), 0);
             }}
             className="hidden 2xl:inline-flex text-[#3A3835] pb-1 hover:text-[#E1BD7E] transition-colors duration-200 cursor-pointer"
           >
-            Blessing Ritual
+            About Five Elements
           </button>
         </nav>
 
@@ -89,12 +93,12 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             onClick={onOpenSoundBowl}
-            title="Singing Bowl Sound Bath"
-            aria-label="Open singing bowl sound bath"
+            title="Optional sound guide"
+            aria-label="Open optional sound guide"
             className="hidden xl:inline-flex items-center gap-1.5 rounded border border-[#d4c3bd] px-2.5 py-2 text-[#321a0f] hover:bg-[#F3EFEA] hover:border-[#E1BD7E] transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm text-[#E1BD7E]">temple_buddhist</span>
-            <span className="text-[10px] font-sans font-medium">Sound Bath</span>
+            <span className="text-[10px] font-sans font-medium">Sound guide</span>
           </button>
 
           {/* Search Bar */}
@@ -167,24 +171,26 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => {
                 onNavigate('home');
+                onSelectCollection(null);
                 setMobileMenuOpen(false);
-                const el = document.getElementById('collections');
-                el?.scrollIntoView({ behavior: 'smooth' });
+                window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0);
               }}
               className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E]"
             >
               Collections
             </button>
+            <button onClick={() => { onNavigate('home'); onSelectCollection('108-malas'); setMobileMenuOpen(false); window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0); }} className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E]">108 Malas</button>
+            <button onClick={() => { onNavigate('home'); onSelectCollection('sacred-woods'); setMobileMenuOpen(false); window.setTimeout(() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' }), 0); }} className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E]">Sacred Woods</button>
             <button
               onClick={() => {
                 onNavigate('home');
+                onSelectCollection(null);
                 setMobileMenuOpen(false);
-                const el = document.getElementById('sacred-consecration-story');
-                el?.scrollIntoView({ behavior: 'smooth' });
+                window.setTimeout(() => document.getElementById('five-elements-culture')?.scrollIntoView({ behavior: 'smooth' }), 0);
               }}
               className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E]"
             >
-              Sacred Consecration &amp; Lineage
+              Five Elements Culture
             </button>
             <button
               onClick={() => {
@@ -193,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E]"
             >
-              Singing Bowl Sound Bath
+              Optional sound guide
             </button>
             <button
               onClick={() => {
@@ -202,7 +208,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E] flex items-center justify-between"
             >
-              <span>Mindfulness Quiz</span>
+              <span>Style Quiz</span>
               <span className="px-1.5 py-0.5 text-[9px] bg-[#cfe9d4] text-[#0a2013] rounded font-bold">
                 60s
               </span>
@@ -214,7 +220,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               className="text-left py-1 text-[#321a0f] hover:text-[#E1BD7E] flex items-center justify-between"
             >
-              <span>Your Sacred Bag &amp; Regional Pool</span>
+              <span>Shopping Bag</span>
               <span className="px-2 py-0.5 text-xs bg-[#E1BD7E] text-[#321a0f] rounded-full font-bold">
                 {cartCount}
               </span>

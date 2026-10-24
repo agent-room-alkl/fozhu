@@ -17,7 +17,7 @@ export const TopNotificationBar: React.FC<TopNotificationBarProps> = ({
 }) => {
   const selectedCountry = SHIPPING_COUNTRIES.find((country) => country.code === shippingCountry)
     || SHIPPING_COUNTRIES.find((country) => country.code === DEFAULT_SHIPPING_COUNTRY)!;
-  const visitorIsOutsideShippingArea = detectedCountryCode && detectedCountryCode !== selectedCountry.code;
+  const visitorIsOutsideShippingArea = detectedCountryCode && !SHIPPING_COUNTRIES.some((country) => country.code === detectedCountryCode);
 
   return (
     <aside
@@ -27,9 +27,9 @@ export const TopNotificationBar: React.FC<TopNotificationBarProps> = ({
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
         <div className="flex items-center gap-2 text-center md:text-left">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#E1BD7E]"></span>
-          <span className="font-medium">CURRENTLY SHIPPING TO NEW ZEALAND</span>
+          <span className="font-medium">SHIPPING TO 28 COUNTRIES</span>
           <span className="text-[#bd9686] hidden sm:inline">•</span>
-          <span className="hidden sm:inline text-[#E1BD7E]">More destinations coming soon</span>
+          <span className="hidden sm:inline text-[#E1BD7E]">One item ships individually</span>
         </div>
 
         <div className="flex items-center gap-3 text-xs">
@@ -51,7 +51,7 @@ export const TopNotificationBar: React.FC<TopNotificationBarProps> = ({
             <span aria-hidden="true" className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-sm pointer-events-none">expand_more</span>
           </div>
           {visitorIsOutsideShippingArea && (
-            <span className="hidden lg:inline text-[#bd9686]">Your location is detected, but delivery is currently available to New Zealand only.</span>
+            <span className="hidden lg:inline text-[#bd9686]">Your location is not in the current Shopify shipping list. Choose a supported destination.</span>
           )}
         </div>
       </div>

@@ -48,13 +48,13 @@ export const SingingBowlAudioModal: React.FC<SingingBowlAudioModalProps> = ({
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#cfe9d4] text-[#0a2013] text-[11px] font-sans font-bold">
             <span className="material-symbols-outlined text-sm">spatial_audio</span>
-            <span>Acoustic Frequency Sanctuary</span>
+            <span>Optional listening guide</span>
           </div>
           <h2 className="text-2xl font-serif text-[#321a0f]">
-            Tibetan Singing Bowl
+            Sound guide
           </h2>
           <p className="text-xs font-sans text-[#504440] max-w-xs mx-auto">
-            Traditional hand-hammered 7-metal acoustic resonance tuned to natural harmonic overtones.
+            A simple generated tone for a quiet listening pause. It is not a recording of a traditional instrument or a therapeutic treatment.
           </p>
         </div>
 
@@ -84,13 +84,13 @@ export const SingingBowlAudioModal: React.FC<SingingBowlAudioModalProps> = ({
         {/* Frequency Toggles */}
         <div className="space-y-2 text-xs font-sans">
           <span className="text-[#82746f] block uppercase tracking-wider text-[10px] font-semibold">
-            Choose Harmonic Tuning
+            Choose a tone
           </span>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { freq: 432, label: '432 Hz', desc: 'Heart Center' },
-              { freq: 528, label: '528 Hz', desc: 'Inner Calm' },
-              { freq: 639, label: '639 Hz', desc: 'Harmony' },
+              { freq: 432, label: '432 Hz', desc: 'Tone' },
+              { freq: 528, label: '528 Hz', desc: 'Tone' },
+              { freq: 639, label: '639 Hz', desc: 'Tone' },
             ].map((f) => (
               <button
                 key={f.freq}
@@ -123,7 +123,7 @@ export const SingingBowlAudioModal: React.FC<SingingBowlAudioModalProps> = ({
             <span className="material-symbols-outlined text-sm">
               {isContinuous ? 'pause_circle' : 'play_circle'}
             </span>
-            <span>{isContinuous ? 'Pause Meditative Resonance' : 'Continuous Breath Cycle'}</span>
+            <span>{isContinuous ? 'Pause continuous tone' : 'Play continuous tone'}</span>
           </button>
         </div>
       </div>

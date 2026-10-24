@@ -10,7 +10,7 @@ export const IntentionQuizBanner: React.FC<IntentionQuizBannerProps> = ({ onOpen
       <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4a2f23] text-[#E1BD7E] text-[11px] font-sans font-semibold">
           <span className="material-symbols-outlined text-sm">auto_awesome</span>
-          <span>Personal Energy Assessment</span>
+          <span>Five Elements · Style Quiz</span>
         </div>
 
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif text-[#FAF8F5]">
